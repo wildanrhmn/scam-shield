@@ -5,6 +5,7 @@ import { SYSTEM_PROMPT } from "./prompt.js";
 import type { AnalyzeInput } from "../types.js";
 
 const MODEL = process.env.MODEL ?? "claude-sonnet-5";
+const TIMEOUT_MS = Number(process.env.ANALYZE_TIMEOUT_MS ?? 45_000);
 
 // Lazily constructed so the server always boots (health checks, manifest) even
 // before ANTHROPIC_API_KEY is set — only an actual analysis needs the key.
@@ -56,7 +57,7 @@ export async function analyze(input: AnalyzeInput): Promise<Verdict> {
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content }],
     output_config: { format: zodOutputFormat(Verdict) },
-  });
+  }, { timeout: TIMEOUT_MS });
 
   const verdict = response.parsed_output;
   if (!verdict) {
