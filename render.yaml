@@ -1,0 +1,25 @@
+# Render.com blueprint. Push this repo to GitHub, then Render → New → Blueprint.
+# Secrets (sync: false) are entered in the Render dashboard, never committed.
+services:
+  - type: web
+    name: scam-shield
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MODEL
+        value: claude-sonnet-5
+      - key: PRICE
+        value: "$0.02"
+      - key: PAYMENTS_ENABLED
+        value: "true"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAY_TO_ADDRESS
+        sync: false
+      - key: OKX_API_KEY
+        sync: false
+      - key: OKX_SECRET_KEY
+        sync: false
+      - key: OKX_PASSPHRASE
+        sync: false
