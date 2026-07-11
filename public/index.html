@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scam Shield — Is this legit?</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --line:#232a34; --ink:#e6edf3; --muted:#8b98a9;
+    --safe:#2ea043; --caution:#d29922; --scam:#f85149; --accent:#3b82f6;
+    --radius:16px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f8fa; --panel:#ffffff; --line:#e2e8f0; --ink:#0d1117; --muted:#57606a; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;background:var(--bg);color:var(--ink);
+    display:flex;justify-content:center;padding:32px 16px}
+  .wrap{width:100%;max-width:640px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  header .logo{font-size:30px}
+  header h1{font-size:22px;margin:0;letter-spacing:-.02em}
+  .tag{color:var(--muted);margin:0 0 22px;font-size:15px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  textarea{width:100%;min-height:120px;resize:vertical;background:transparent;color:var(--ink);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;font:inherit;outline:none}
+  textarea:focus{border-color:var(--accent)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{cursor:pointer;border:0;border-radius:10px;font:inherit;font-weight:600;padding:11px 18px}
+  .go{background:var(--accent);color:#fff}
+  .go:disabled{opacity:.6;cursor:default}
+  .chip{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500;font-size:13px;padding:7px 11px;border-radius:999px}
+  .chip:hover{color:var(--ink);border-color:var(--accent)}
+  .chips{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .chips .label{color:var(--muted);font-size:13px;align-self:center;margin-right:2px}
+  #out{margin-top:18px}
+  .verdict{border-radius:var(--radius);border:1px solid var(--line);overflow:hidden}
+  .vhead{display:flex;align-items:center;gap:14px;padding:16px 18px}
+  .badge{font-weight:800;letter-spacing:.04em;font-size:14px;padding:6px 12px;border-radius:999px;color:#fff;white-space:nowrap}
+  .b-safe{background:var(--safe)} .b-caution{background:var(--caution)} .b-scam{background:var(--scam)}
+  .vtitle{font-weight:700;font-size:16px;margin:0}
+  .vbody{padding:0 18px 18px}
+  .summary{color:var(--ink);margin:2px 0 14px}
+  .meter{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin:4px 0 16px}
+  .meter>span{display:block;height:100%}
+  .flags{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:8px}
+  .flag{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+  .sev{font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:6px;margin-top:1px;white-space:nowrap}
+  .s-high{background:rgba(248,81,73,.16);color:var(--scam)} .s-medium{background:rgba(210,153,34,.16);color:var(--caution)} .s-low{background:rgba(139,152,169,.16);color:var(--muted)}
+  .actions{margin:0;padding-left:18px;font-size:14px;color:var(--ink)}
+  .actions li{margin:5px 0}
+  h4{margin:16px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .disc{color:var(--muted);font-size:12px;margin-top:14px}
+  .err{color:var(--scam)}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="logo">🛡️</span><h1>Scam Shield</h1></header>
+  <p class="tag">Paste any message, link, email, or wallet address — get an instant verdict.</p>
+
+  <div class="card">
+    <textarea id="in" placeholder="e.g. ROYAL MAIL: unpaid £1.99 shipping fee, pay within 24h: https://royalmail-redelivery.info/pay"></textarea>
+    <div class="row"><button class="go" id="go">Check it</button></div>
+    <div class="chips">
+      <span class="label">Try:</span>
+      <button class="chip" data-s="ROYAL MAIL: Your parcel has a £1.99 unpaid shipping fee. Pay within 24h or it returns to sender: https://royalmail-redelivery.info/pay">Parcel SMS</button>
+      <button class="chip" data-s="🎉 You are eligible for the OKB community airdrop (2,500 OKB). Connect your wallet to claim before it expires: https://okb-airdrop-claim.xyz — verify your seed phrase to receive tokens.">Crypto airdrop</button>
+      <button class="chip" data-s="Hi! We reviewed your profile and want to offer you a remote data-entry role, $450/day, no interview. To onboard, please pay a $50 refundable equipment deposit via gift card and send the code.">Job offer</button>
+      <button class="chip" data-s="Hey, running 10 mins late for lunch — grab us a table and I'll be right there!">Benign text</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+  <footer>Risk guidance, not a guarantee. Verify independently. · An Agentic Service Provider on OKX.AI</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const inp = $("#in"), out = $("#out"), go = $("#go");
+const COLOR = { safe:"var(--safe)", caution:"var(--caution)", scam:"var(--scam)" };
+const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => { inp.value = c.dataset.s; check(); });
+go.onclick = check;
+
+async function check(){
+  const text = inp.value.trim();
+  if(!text) return;
+  go.disabled = true; out.innerHTML = `<p class="tag">Analyzing…</p>`;
+  try{
+    const r = await fetch("/analyze", {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})});
+    const v = await r.json();
+    render(v);
+  }catch(e){
+    out.innerHTML = `<p class="err">Couldn't reach the analyzer. ${esc(e.message||e)}</p>`;
+  }finally{ go.disabled = false; }
+}
+
+function render(v){
+  const level = v.verdict || "caution";
+  const flags = (v.red_flags||[]).map(f =>
+    `<li class="flag"><span class="sev s-${esc(f.severity)}">${esc(f.severity)}</span><span><b>${esc(f.label)}</b> — ${esc(f.detail)}</span></li>`).join("");
+  const acts = (v.recommended_actions||[]).map(a => `<li>${esc(a)}</li>`).join("");
+  out.innerHTML = `
+    <div class="verdict">
+      <div class="vhead">
+        <span class="badge b-${esc(level)}">${esc(level.toUpperCase())}</span>
+        <p class="vtitle">${esc(v.title||"")}</p>
+      </div>
+      <div class="vbody">
+        <div class="meter"><span style="width:${Math.max(2,Math.min(100,v.risk_score||0))}%;background:${COLOR[level]}"></span></div>
+        <p class="tag" style="margin:-8px 0 12px">Risk ${esc(v.risk_score)}/100 · Confidence ${esc(v.confidence)}%</p>
+        <p class="summary">${esc(v.summary||"")}</p>
+        ${flags ? `<h4>Red flags</h4><ul class="flags">${flags}</ul>`:""}
+        ${acts ? `<h4>What to do</h4><ol class="actions">${acts}</ol>`:""}
+        <p class="disc">${esc(v.disclaimer||"")}</p>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
