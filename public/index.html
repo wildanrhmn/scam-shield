@@ -79,6 +79,9 @@
 <script>
 const $ = s => document.querySelector(s);
 const inp = $("#in"), out = $("#out"), go = $("#go");
+// Resolve the API path so the demo works whether it's served at "/demo" or
+// behind a prefix like "/scam-shield/demo" (nginx). /analyze is a sibling of /demo.
+const ANALYZE = location.pathname.replace(/\/demo\/?$/, "") + "/analyze";
 const COLOR = { safe:"var(--safe)", caution:"var(--caution)", scam:"var(--scam)" };
 const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -90,7 +93,7 @@ async function check(){
   if(!text) return;
   go.disabled = true; out.innerHTML = `<p class="tag">Analyzing…</p>`;
   try{
-    const r = await fetch("/analyze", {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})});
+    const r = await fetch(ANALYZE, {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})});
     const v = await r.json();
     render(v);
   }catch(e){
