@@ -1,9 +1,11 @@
 import "dotenv/config";
+import path from "node:path";
 import express from "express";
 import { analyze } from "./engine/analyze.js";
 import { validateInput, ValidationError } from "./security/validate.js";
 import { rateLimiter } from "./security/rateLimit.js";
 import { createPaymentLayer } from "./payment/x402.js";
+import { isBreakerOpen, tripBreaker, closeBreaker, isServiceUnavailableError } from "./breaker.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true";
@@ -42,6 +44,18 @@ async function main() {
   // Human-facing demo card at /demo (machine manifest stays at /).
   app.use("/demo", express.static("public"));
 
+  // Circuit breaker — when the engine can't serve (dry Claude balance, auth
+  // failure), reject BEFORE the payment gate so buyers are never charged.
+  app.use((req, res, next) => {
+    if (req.method === "POST" && (req.path === "/analyze" || req.path === "/try") && isBreakerOpen()) {
+      return res
+        .status(503)
+        .set("Retry-After", "120")
+        .json({ error: "Scam Shield is temporarily unavailable. No payment was taken — please try again shortly." });
+    }
+    next();
+  });
+
   // Payment gate (only when enabled). When on, x402 runs before /analyze.
   let paymentLayer: Awaited<ReturnType<typeof createPaymentLayer>> | null = null;
   if (PAYMENTS_ENABLED) {
@@ -56,7 +70,11 @@ async function main() {
     maxGlobal: Number(process.env.RATE_LIMIT_GLOBAL_MAX ?? 100),
   });
 
-  app.get("/", (_req, res) => {
+  app.get("/", (req, res) => {
+    // Browsers get the landing page; agents/curl get the JSON manifest.
+    if ((req.headers.accept ?? "").includes("text/html")) {
+      return res.sendFile(path.resolve("public/index.html"));
+    }
     res.json({
       name: "Scam Shield",
       tagline: "Paste any message, link, email, or wallet address — get an instant Safe / Caution / Scam verdict.",
@@ -81,11 +99,13 @@ async function main() {
     }
     try {
       const verdict = await analyze(input);
+      closeBreaker(); // a success means the engine is healthy again
       console.log(`[analyze] ${verdict.verdict} risk=${verdict.risk_score} ev=${verdict.evidence.length} ${Date.now() - start}ms`);
       res.json(verdict);
     } catch (err) {
       // Log full detail server-side; never leak internal errors to the caller.
       console.error(`[analyze] failed after ${Date.now() - start}ms:`, err instanceof Error ? err.message : err);
+      if (isServiceUnavailableError(err)) tripBreaker(err instanceof Error ? err.message : "engine unavailable");
       res.status(503).json(cautionBody("We couldn't complete the check right now. Treat this as unverified and try again shortly."));
     }
   };
