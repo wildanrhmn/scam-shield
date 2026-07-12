@@ -7,8 +7,7 @@ async function getJson(url: string): Promise<any | null> {
   const t = setTimeout(() => ctrl.abort(), NET_TIMEOUT);
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { accept: "application/json" } });
-    if (!res.ok) return null;
-    return await res.json();
+    return res.ok ? await res.json() : null;
   } catch {
     return null;
   } finally {
@@ -16,7 +15,6 @@ async function getJson(url: string): Promise<any | null> {
   }
 }
 
-// GoPlus address_security flags → evidence. Keyless, cross-chain malicious-address DB.
 const ADDRESS_FLAGS: Record<string, { label: string; severity: Evidence["severity"] }> = {
   sanctioned: { label: "on a sanctions list", severity: "high" },
   phishing_activities: { label: "linked to phishing activity", severity: "high" },
@@ -33,7 +31,6 @@ const ADDRESS_FLAGS: Record<string, { label: string; severity: Evidence["severit
   blacklist_doubt: { label: "suspected blacklisted", severity: "medium" },
 };
 
-/** GoPlus address security — sanctions, phishing, theft, and other malicious flags. */
 export async function goPlusAddress(address: string): Promise<Evidence[]> {
   const data = await getJson(`https://api.gopluslabs.io/api/v1/address_security/${address}`);
   const result = data?.result;
@@ -41,13 +38,7 @@ export async function goPlusAddress(address: string): Promise<Evidence[]> {
   const out: Evidence[] = [];
   for (const [key, meta] of Object.entries(ADDRESS_FLAGS)) {
     if (String(result[key]) === "1") {
-      out.push({
-        claim: `Address is ${meta.label} (GoPlus security data)`,
-        source: "GoPlus",
-        kind: "verified",
-        severity: meta.severity,
-        subject: address,
-      });
+      out.push({ claim: `Address is ${meta.label} (GoPlus security data)`, source: "GoPlus", kind: "verified", severity: meta.severity, subject: address });
     }
   }
   if (out.length === 0) {
@@ -56,14 +47,12 @@ export async function goPlusAddress(address: string): Promise<Evidence[]> {
   return out;
 }
 
-// Chains to probe a token contract against (most common for scam tokens).
 export const TOKEN_CHAINS: Array<{ id: string; name: string }> = [
   { id: "1", name: "Ethereum" },
   { id: "56", name: "BSC" },
   { id: "196", name: "X Layer" },
 ];
 
-// GoPlus token_security dangerous fields → evidence.
 const TOKEN_FLAGS: Array<{ key: string; label: string; severity: Evidence["severity"] }> = [
   { key: "is_honeypot", label: "is a honeypot — buyers cannot sell it", severity: "high" },
   { key: "cannot_sell_all", label: "does not allow selling all tokens (honeypot indicator)", severity: "high" },
@@ -76,7 +65,7 @@ const TOKEN_FLAGS: Array<{ key: string; label: string; severity: Evidence["sever
   { key: "is_mintable", label: "can be minted freely by the owner", severity: "low" },
 ];
 
-/** GoPlus token security — honeypot/rug indicators. Returns [] if not a token on this chain. */
+// Returns [] when the address isn't a token on this chain.
 export async function goPlusToken(address: string, chain: { id: string; name: string }): Promise<Evidence[]> {
   const data = await getJson(`https://api.gopluslabs.io/api/v1/token_security/${chain.id}?contract_addresses=${address}`);
   const info = data?.result?.[address.toLowerCase()];
@@ -91,11 +80,9 @@ export async function goPlusToken(address: string, chain: { id: string; name: st
   return out;
 }
 
-/** GoPlus phishing-site check for a URL/host (crypto drainer sites). */
 export async function goPlusPhishingSite(host: string): Promise<Evidence[]> {
   const data = await getJson(`https://api.gopluslabs.io/api/v1/phishing_site?url=${encodeURIComponent(host)}`);
-  const r = data?.result;
-  if (r && String(r.phishing_site) === "1") {
+  if (data?.result && String(data.result.phishing_site) === "1") {
     return [{ claim: `${host} is a known crypto phishing / wallet-drainer site (GoPlus)`, source: "GoPlus", kind: "verified", severity: "high", subject: host }];
   }
   return [];

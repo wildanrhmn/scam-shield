@@ -1,7 +1,5 @@
 import type { Evidence } from "./types.js";
 
-// Authoritative US Treasury OFAC sanctioned crypto addresses (maintained mirror of
-// the SDN list). Cached in-memory; GoPlus coverage has gaps, this closes sanctions.
 const LIST_URL =
   "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.txt";
 const TTL_MS = 6 * 3600 * 1000;
@@ -25,6 +23,7 @@ async function loadList(): Promise<Set<string>> {
   }
 }
 
+// US Treasury OFAC sanctioned addresses — closes the sanctions gaps GoPlus misses.
 export async function ofacCheck(address: string): Promise<Evidence[]> {
   const set = await loadList();
   if (set.has(address.toLowerCase())) {

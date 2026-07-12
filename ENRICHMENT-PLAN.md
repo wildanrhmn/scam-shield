@@ -1,4 +1,4 @@
-# Scam Shield — Evidence Enrichment Plan
+# Scaminja — Evidence Enrichment Plan
 
 *Goal: every verdict is backed by verifiable evidence from authoritative sources, with each claim tagged `verified` (a fact from a real source) vs `assessment` (AI reasoning). We do NOT claim 100% certainty — we cite proof and stay honest about the rest.*
 

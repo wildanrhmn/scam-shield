@@ -1,4 +1,4 @@
-# Scam Shield — Build Plan & "Perfect Roadway"
+# Scaminja — Build Plan & "Perfect Roadway"
 
 *The ASP we're shipping for the OKX.AI Genesis Hackathon. Deadline: X post + Google form by **2026-07-17, 23:59 UTC**. This doc is the single source of truth for how it's built, every known limitation, and exactly what I need from you.*
 
@@ -6,7 +6,7 @@
 
 ## 0. What we're building (one paragraph)
 
-**Scam Shield** is an **A2MCP** (Agent-to-MCP) Agent Service Provider on OKX.AI. A user (or their agent) sends *any* content — a pasted message, a screenshot, an email, a URL, a wallet address, a token, a job offer — to our public HTTPS endpoint. The endpoint is gated by the **x402** payment standard: the caller pays a small fee per call (settled in USDT/USDG on X Layer), then receives an instant verdict: **SAFE / CAUTION / SCAM**, with the exact red flags and a recommended next step. The analysis engine is **Claude Opus 4.8 (vision)** producing a structured verdict, optionally enriched with **OKX OnchainOS** security checks (token-risk / address / phishing) for crypto inputs.
+**Scaminja** is an **A2MCP** (Agent-to-MCP) Agent Service Provider on OKX.AI. A user (or their agent) sends *any* content — a pasted message, a screenshot, an email, a URL, a wallet address, a token, a job offer — to our public HTTPS endpoint. The endpoint is gated by the **x402** payment standard: the caller pays a small fee per call (settled in USDT/USDG on X Layer), then receives an instant verdict: **SAFE / CAUTION / SCAM**, with the exact red flags and a recommended next step. The analysis engine is **Claude Opus 4.8 (vision)** producing a structured verdict, optionally enriched with **OKX OnchainOS** security checks (token-risk / address / phishing) for crypto inputs.
 
 ---
 
@@ -17,7 +17,7 @@
       │  HTTP POST /analyze   { input, type?, image? }
       ▼
 ┌─────────────────────────────────────────────┐
-│  Scam Shield endpoint  (Node + Express, TS)  │
+│  Scaminja endpoint  (Node + Express, TS)  │
 │                                              │
 │  1. x402 middleware ──► 402 PAYMENT-REQUIRED │  ← unpaid request
 │     (WWW-Authenticate: Payment)              │

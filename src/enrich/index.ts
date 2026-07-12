@@ -14,14 +14,9 @@ export interface EnrichResult {
   evidence: Evidence[];
 }
 
-// Cap per-type to bound cost/latency/abuse (a message with 100 URLs shouldn't fan out to 100 lookups).
-const MAX = 8;
+const MAX = 8; // per-type cap to bound cost/latency/abuse
 const uniq = (a: string[]) => [...new Set(a)];
 
-/**
- * Extract entities, follow shortened links to their true destination, then
- * validate everything against authoritative sources in parallel.
- */
 export async function enrich(text: string): Promise<EnrichResult> {
   const entities = extractEntities(text);
 
@@ -33,7 +28,7 @@ export async function enrich(text: string): Promise<EnrichResult> {
 
   const evidence: Evidence[] = [];
 
-  // Phase 1 — expand shortened links so we validate the true destination.
+  // Expand shortened links so we validate the true destination.
   const shorteners = urls.filter(isShortener);
   if (shorteners.length) {
     const expanded = await Promise.allSettled(shorteners.map(expandUrl));
@@ -50,9 +45,8 @@ export async function enrich(text: string): Promise<EnrichResult> {
     domains = uniq(domains).slice(0, MAX);
   }
 
-  // Phase 2 — validate everything in parallel.
   const tasks: Promise<Evidence[]>[] = [];
-  tasks.push(Promise.resolve(checkEmailHeaders(text))); // SPF/DKIM/DMARC if headers present
+  tasks.push(Promise.resolve(checkEmailHeaders(text)));
   if (urls.length) tasks.push(safeBrowsing(urls));
   for (const u of urls) {
     tasks.push(Promise.resolve(urlStructure(u)));
@@ -64,7 +58,7 @@ export async function enrich(text: string): Promise<EnrichResult> {
     tasks.push(goPlusPhishingSite(d));
     tasks.push(vtDomain(d));
   }
-  for (const d of emailDomains) tasks.push(domainAge(d)); // sender-domain age
+  for (const d of emailDomains) tasks.push(domainAge(d));
   for (const a of [...ethAddrs, ...solAddrs]) tasks.push(goPlusAddress(a));
   for (const a of ethAddrs) {
     tasks.push(ofacCheck(a));

@@ -1,15 +1,6 @@
-/**
- * System prompt for the Scam Shield analysis engine.
- *
- * Design goals:
- *  - Universal: works for grandma's parcel-delivery SMS AND a crypto drainer link.
- *  - Safety-biased: unknown / insufficient info => CAUTION, never SAFE (BUILD-PLAN R4).
- *  - Always explains WHY, with the specific red flags — this is what makes the
- *    output shareable and trustworthy.
- *  - No guarantees, no legal/financial advice.
- */
-
-export const SYSTEM_PROMPT = `You are Scam Shield, an expert fraud, phishing, and scam detector.
+// Safety-biased: unknown / insufficient info => CAUTION, never SAFE. Always
+// explains WHY. No guarantees, no legal/financial advice.
+export const SYSTEM_PROMPT = `You are Scaminja, an expert fraud, phishing, and scam detector.
 
 A person forwards you something they are unsure about — a text message, a DM, an email, a URL, a crypto wallet address, a token, a "job offer", a screenshot, or anything else — and asks: "Is this legit?"
 

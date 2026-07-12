@@ -1,9 +1,9 @@
 {
-  "name": "scam-shield",
+  "name": "scaminja",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Scam Shield — an A2MCP Agent Service Provider on OKX.AI. Paste any message, link, email, or wallet address and get an instant Safe / Caution / Scam verdict.",
+  "description": "Scaminja — an A2MCP Agent Service Provider on OKX.AI. Paste any message, link, email, or wallet address and get an instant, evidence-backed Safe / Caution / Scam verdict.",
   "engines": {
     "node": ">=20"
   },

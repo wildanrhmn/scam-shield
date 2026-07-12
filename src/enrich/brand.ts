@@ -1,6 +1,5 @@
 import type { Evidence } from "./types.js";
 
-// Commonly-impersonated brands → official registrable domains + name tokens.
 const BRANDS: Array<{ name: string; domains: string[]; tokens: string[] }> = [
   { name: "PayPal", domains: ["paypal.com"], tokens: ["paypal"] },
   { name: "Apple", domains: ["apple.com", "icloud.com"], tokens: ["apple", "icloud"] },
@@ -40,18 +39,16 @@ function levenshtein(a: string, b: string): number {
   return d[m][n];
 }
 
-/** Deterministic brand-impersonation / typosquat check for a domain. */
 export function checkBrand(host: string): Evidence[] {
   const h = host.toLowerCase();
   const reg = registrable(h);
   const sld = reg.split(".")[0];
 
   for (const brand of BRANDS) {
-    if (brand.domains.includes(reg)) return []; // it IS the official brand (or a real subdomain) — benign
+    if (brand.domains.includes(reg)) return []; // the official brand (or a real subdomain)
     const brandSld = brand.domains[0].split(".")[0];
 
-    // Typosquat: look-alike of the official name (paypa1, arnazon, g00gle) —
-    // check the whole SLD and each hyphen-separated part (paypa1-secure → paypa1).
+    // Typosquat: the whole SLD or any hyphen-part is a near-miss of the brand.
     const candidates = [sld, ...sld.split("-")].filter((c) => c.length >= 4);
     for (const cand of candidates) {
       const dist = levenshtein(cand, brandSld);
@@ -59,8 +56,7 @@ export function checkBrand(host: string): Evidence[] {
         return [{ claim: `Domain "${reg}" is a look-alike of ${brand.name} (${brand.domains[0]})`, source: "typosquat check", kind: "verified", severity: "high", subject: host }];
       }
     }
-    // Impersonation: brand name as a whole label/word anywhere in the host
-    // (bounded by start/end or a . / - separator) — avoids "applepie" false hits.
+    // Impersonation: brand name as a whole word (bounded), avoiding "applepie".
     for (const token of brand.tokens) {
       if (token.length >= 5 && new RegExp(`(^|[.-])${token}([.-]|$)`).test(h)) {
         return [{ claim: `Domain "${reg}" uses the ${brand.name} name but is not an official ${brand.name} domain`, source: "brand check", kind: "verified", severity: "medium", subject: host }];

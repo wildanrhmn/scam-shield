@@ -12,7 +12,7 @@ async function vtGet(path: string): Promise<any | null> {
       headers: { "x-apikey": VT_KEY },
       signal: ctrl.signal,
     });
-    if (!res.ok) return null; // 404 (never analyzed) / 429 (rate limit) → best-effort skip
+    if (!res.ok) return null; // 404 unseen / 429 rate-limited → best-effort skip
     return await res.json();
   } catch {
     return null;
@@ -30,19 +30,14 @@ function statsToEvidence(stats: any, subject: string, kind: string): Evidence[] 
   return [];
 }
 
-/** VirusTotal URL reputation (by content id; best-effort, no submission). */
 export async function vtUrl(url: string): Promise<Evidence[]> {
-  const id = Buffer.from(url).toString("base64url");
-  const data = await vtGet(`urls/${id}`);
+  const data = await vtGet(`urls/${Buffer.from(url).toString("base64url")}`);
   const stats = data?.data?.attributes?.last_analysis_stats;
-  if (!stats) return [];
-  return statsToEvidence(stats, url, "URL");
+  return stats ? statsToEvidence(stats, url, "URL") : [];
 }
 
-/** VirusTotal domain reputation. */
 export async function vtDomain(domain: string): Promise<Evidence[]> {
   const data = await vtGet(`domains/${encodeURIComponent(domain)}`);
   const stats = data?.data?.attributes?.last_analysis_stats;
-  if (!stats) return [];
-  return statsToEvidence(stats, domain, "Domain");
+  return stats ? statsToEvidence(stats, domain, "Domain") : [];
 }

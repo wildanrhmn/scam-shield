@@ -1,17 +1,8 @@
 import { z } from "zod";
 
-/**
- * The Scam Shield verdict contract.
- *
- * This is both the structured output we force Claude to return AND the public
- * shape a caller receives. Kept flat and enum-driven so it renders cleanly as a
- * card in the demo and is trivial for another agent to consume.
- *
- * Note: JSON-Schema structured outputs do not support numeric min/max or string
- * length constraints, so ranges (0-100) are enforced via the prompt + a clamp in
- * analyze.ts rather than in the schema.
- */
-
+// The structured output Claude returns AND the public response shape. Ranges
+// (0-100) are enforced via the prompt + a clamp in analyze.ts — JSON-Schema
+// structured outputs don't support numeric min/max.
 export const VerdictLevel = z.enum(["safe", "caution", "scam"]);
 export type VerdictLevel = z.infer<typeof VerdictLevel>;
 

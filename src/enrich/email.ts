@@ -1,14 +1,10 @@
 import type { Evidence } from "./types.js";
 
-/**
- * When the input contains raw email headers, read the authentication results.
- * A failed SPF/DKIM/DMARC is authoritative proof the sender is spoofed/forged.
- * Best-effort: emits nothing when headers aren't present (most pasted text).
- */
+// When raw email headers are present, a failed SPF/DKIM/DMARC is authoritative
+// proof the sender is spoofed. Emits nothing for ordinary pasted text.
 export function checkEmailHeaders(text: string): Evidence[] {
   const out: Evidence[] = [];
 
-  // Collapse folded Authentication-Results header(s) into one searchable string.
   const arMatch = text.match(/Authentication-Results:[\s\S]*?(?:\r?\n(?!\s)|$)/i);
   const ar = (arMatch?.[0] ?? "").replace(/\s+/g, " ");
   const receivedSpf = text.match(/Received-SPF:\s*(\w+)/i)?.[1]?.toLowerCase();

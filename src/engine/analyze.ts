@@ -9,13 +9,10 @@ import type { AnalyzeInput } from "../types.js";
 const MODEL = process.env.MODEL ?? "claude-sonnet-5";
 const TIMEOUT_MS = Number(process.env.ANALYZE_TIMEOUT_MS ?? 45_000);
 
-/** The verdict plus the verified evidence gathered from authoritative sources. */
 export interface ScamVerdict extends Verdict {
   evidence: Evidence[];
 }
 
-// Lazily constructed so the server always boots (health checks, manifest) even
-// before ANTHROPIC_API_KEY is set — only an actual analysis needs the key.
 let _client: Anthropic | null = null;
 function getClient(): Anthropic {
   if (!_client) _client = new Anthropic();
@@ -28,25 +25,16 @@ function factsBlock(evidence: Evidence[]): string {
   if (evidence.length === 0) return "";
   const lines = evidence.map((e) => `- [${e.severity}] ${e.claim} (source: ${e.source})`).join("\n");
   return (
-    `\n\nVERIFIED FACTS from authoritative sources (these were checked live against real databases — treat them as authoritative and weigh them heavily). ` +
-    `A high-severity verified fact (e.g. a Safe Browsing phishing hit, an OFAC sanction, a known drainer address) must drive the verdict to SCAM. ` +
-    `Do not contradict a verified fact; cite it in your reasoning:\n${lines}`
+    `\n\nVERIFIED FACTS from authoritative sources (checked live against real databases — treat as authoritative and weigh heavily). ` +
+    `A high-severity verified fact (Safe Browsing hit, OFAC sanction, known drainer) must drive the verdict to SCAM. Cite them:\n${lines}`
   );
 }
 
-/**
- * Two-pass analysis: extract entities and validate them against authoritative
- * sources, then have Claude synthesize an evidence-aware verdict. A deterministic
- * guard ensures verified high/medium-severity facts always override the model.
- */
 export async function analyze(input: AnalyzeInput): Promise<ScamVerdict> {
   const hasText = !!input.text?.trim();
   const hasImage = !!input.imageBase64;
-  if (!hasText && !hasImage) {
-    throw new Error("Provide `text` and/or `imageBase64` to analyze.");
-  }
+  if (!hasText && !hasImage) throw new Error("Provide `text` and/or `imageBase64` to analyze.");
 
-  // Pass 1 — extract + validate against real data sources (text inputs).
   const { evidence } = hasText ? await enrich(input.text!) : { evidence: [] as Evidence[] };
 
   const content: Anthropic.ContentBlockParam[] = [];
@@ -66,7 +54,6 @@ export async function analyze(input: AnalyzeInput): Promise<ScamVerdict> {
         : `Assess whether the attached screenshot shows a scam. Return your verdict.${hint}`) + factsBlock(evidence),
   });
 
-  // Pass 2 — Claude synthesizes the verdict, informed by the verified facts.
   const response = await getClient().messages.parse(
     {
       model: MODEL,
@@ -91,8 +78,7 @@ export async function analyze(input: AnalyzeInput): Promise<ScamVerdict> {
   verdict.confidence = clamp(verdict.confidence);
   verdict.risk_score = clamp(verdict.risk_score);
 
-  // Deterministic guard: verified evidence is authoritative, so a verified
-  // high/medium flag can never be reported as "safe".
+  // Verified facts are authoritative — never report "safe" when one is flagged.
   const highVerified = evidence.some((e) => e.kind === "verified" && e.severity === "high");
   const medVerified = evidence.some((e) => e.kind === "verified" && e.severity === "medium");
   if (highVerified && verdict.verdict !== "scam") {

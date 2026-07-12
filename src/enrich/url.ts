@@ -13,7 +13,7 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
-/** Last two labels — a cheap registrable-domain heuristic (imperfect for .co.uk). */
+// Cheap registrable-domain heuristic (last two labels; imperfect for .co.uk).
 function registrableDomain(host: string): string {
   const parts = host.replace(/\.$/, "").split(".");
   return parts.length <= 2 ? host : parts.slice(-2).join(".");
@@ -23,17 +23,18 @@ const SHORTENERS = new Set([
   "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly",
   "cutt.ly", "rebrand.ly", "t.ly", "shorturl.at", "rb.gy",
 ]);
+const RISKY_TLDS = new Set([
+  "zip", "mov", "top", "xyz", "info", "click", "link", "gq", "cf", "tk", "ml", "work", "loan", "country",
+]);
 
 export function isShortener(rawUrl: string): boolean {
   try {
-    const u = new URL(rawUrl.startsWith("http") ? rawUrl : `http://${rawUrl}`);
-    return SHORTENERS.has(u.hostname.toLowerCase());
+    return SHORTENERS.has(new URL(rawUrl.startsWith("http") ? rawUrl : `http://${rawUrl}`).hostname.toLowerCase());
   } catch {
     return false;
   }
 }
 
-/** Follow redirects (shorteners, cloaking) to the true destination. */
 export async function expandUrl(rawUrl: string): Promise<{ finalUrl: string; hops: number }> {
   let current = rawUrl.startsWith("http") ? rawUrl : `http://${rawUrl}`;
   let hops = 0;
@@ -58,30 +59,23 @@ export async function expandUrl(rawUrl: string): Promise<{ finalUrl: string; hop
   }
   return { finalUrl: current, hops };
 }
-const RISKY_TLDS = new Set([
-  "zip", "mov", "top", "xyz", "info", "click", "link", "gq", "cf", "tk", "ml", "work", "loan", "country",
-]);
 
-/** Google Safe Browsing v4 — authoritative phishing/malware blocklist. */
 export async function safeBrowsing(urls: string[]): Promise<Evidence[]> {
   if (!GSB_KEY || urls.length === 0) return [];
   try {
-    const res = await fetchWithTimeout(
-      `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GSB_KEY}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          client: { clientId: "scam-shield", clientVersion: "1.0" },
-          threatInfo: {
-            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-            platformTypes: ["ANY_PLATFORM"],
-            threatEntryTypes: ["URL"],
-            threatEntries: urls.map((u) => ({ url: u })),
-          },
-        }),
-      },
-    );
+    const res = await fetchWithTimeout(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GSB_KEY}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client: { clientId: "scaminja", clientVersion: "1.0" },
+        threatInfo: {
+          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+          platformTypes: ["ANY_PLATFORM"],
+          threatEntryTypes: ["URL"],
+          threatEntries: urls.map((u) => ({ url: u })),
+        },
+      }),
+    });
     if (!res.ok) return [];
     const data = (await res.json()) as { matches?: Array<{ threatType: string; threat: { url: string } }> };
     return (data.matches ?? []).map((m) => ({
@@ -96,7 +90,6 @@ export async function safeBrowsing(urls: string[]): Promise<Evidence[]> {
   }
 }
 
-/** Domain registration age via RDAP — a very young domain is a strong red flag. */
 export async function domainAge(domain: string): Promise<Evidence[]> {
   const reg = registrableDomain(domain);
   try {
@@ -116,7 +109,6 @@ export async function domainAge(domain: string): Promise<Evidence[]> {
   }
 }
 
-/** Deterministic structural red flags in a URL — pure facts, no lookup. */
 export function urlStructure(rawUrl: string): Evidence[] {
   const out: Evidence[] = [];
   let host = "";

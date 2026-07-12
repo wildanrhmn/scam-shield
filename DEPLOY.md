@@ -1,4 +1,4 @@
-# Deploying Scam Shield
+# Deploying Scaminja
 
 The A2MCP endpoint must be reachable at a **public HTTPS URL**. The repo ships a
 `Dockerfile` (portable to any host) and a `render.yaml` blueprint. Two easy paths:

@@ -11,22 +11,12 @@ export interface RateLimitOptions {
   maxGlobal: number;
 }
 
-/**
- * Fixed-window rate limiter with a per-IP cap AND a global cap.
- *
- * - Per-IP cap stops a single abuser.
- * - Global cap bounds total spend (protects the Claude balance in open mode).
- *   The global counter only increments once an IP passes its own check, so one
- *   flooder can't inflate the global counter and lock everyone out.
- *
- * In-memory (fine for a single pm2 instance). Requires `trust proxy` so
- * `req.ip` reflects the real client behind nginx.
- */
+// Fixed-window per-IP + global caps (the global cap bounds total Claude spend in
+// open mode). In-memory; needs `trust proxy` so req.ip is the real client.
 export function rateLimiter(opts: RateLimitOptions) {
   const perIp = new Map<string, Bucket>();
   const global: Bucket = { count: 0, resetAt: 0 };
 
-  // Prune expired IP buckets so the map can't grow unbounded.
   const timer = setInterval(() => {
     const now = Date.now();
     for (const [ip, b] of perIp) if (b.resetAt <= now) perIp.delete(ip);
@@ -56,19 +46,14 @@ export function rateLimiter(opts: RateLimitOptions) {
     const ipCheck = roll(b, now, opts.maxPerIp);
     if (!ipCheck.ok) {
       res.setHeader("Retry-After", String(ipCheck.retryAfter));
-      return res.status(429).json({
-        error: "Rate limit exceeded. Please slow down.",
-        retry_after_seconds: ipCheck.retryAfter,
-      });
+      return res.status(429).json({ error: "Rate limit exceeded. Please slow down.", retry_after_seconds: ipCheck.retryAfter });
     }
 
+    // Only count global once the IP passes, so one flooder can't lock everyone out.
     const gCheck = roll(global, now, opts.maxGlobal);
     if (!gCheck.ok) {
       res.setHeader("Retry-After", String(gCheck.retryAfter));
-      return res.status(503).json({
-        error: "Service is busy right now. Please try again shortly.",
-        retry_after_seconds: gCheck.retryAfter,
-      });
+      return res.status(503).json({ error: "Service is busy right now. Please try again shortly.", retry_after_seconds: gCheck.retryAfter });
     }
 
     next();
