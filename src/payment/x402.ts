@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { loadPaymentConfig, assertPaymentConfig, NETWORK } from "./config.js";
+import { loadPaymentConfig, assertPaymentConfig, NETWORK, USDT0_DECIMALS } from "./config.js";
 
 /**
  * Builds the OKX x402 payment layer for a single A2MCP route.
@@ -50,8 +50,11 @@ export async function createPaymentLayer(routeKey: string): Promise<PaymentLayer
         scheme: "exact",
         network: NETWORK,
         payTo: cfg.payTo,
-        price: cfg.price, // e.g. "$0.05" — SDK converts to USDT0 atomic units
+        price: cfg.price, // explicit { amount, asset } in atomic USDT0 units
         maxTimeoutSeconds: cfg.maxTimeoutSeconds,
+        // USDT0 isn't in the OKX task system's built-in token list, so it can't
+        // look up decimals — advertise them here (read from extra.decimals).
+        extra: { decimals: USDT0_DECIMALS },
       },
     },
   });
