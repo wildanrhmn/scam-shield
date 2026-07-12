@@ -23,6 +23,41 @@ const SHORTENERS = new Set([
   "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly",
   "cutt.ly", "rebrand.ly", "t.ly", "shorturl.at", "rb.gy",
 ]);
+
+export function isShortener(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl.startsWith("http") ? rawUrl : `http://${rawUrl}`);
+    return SHORTENERS.has(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/** Follow redirects (shorteners, cloaking) to the true destination. */
+export async function expandUrl(rawUrl: string): Promise<{ finalUrl: string; hops: number }> {
+  let current = rawUrl.startsWith("http") ? rawUrl : `http://${rawUrl}`;
+  let hops = 0;
+  for (let i = 0; i < 5; i++) {
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(current, { method: "GET", redirect: "manual" });
+    } catch {
+      break;
+    }
+    const loc = res.headers.get("location");
+    if (res.status >= 300 && res.status < 400 && loc) {
+      try {
+        current = new URL(loc, current).toString();
+      } catch {
+        break;
+      }
+      hops++;
+    } else {
+      break;
+    }
+  }
+  return { finalUrl: current, hops };
+}
 const RISKY_TLDS = new Set([
   "zip", "mov", "top", "xyz", "info", "click", "link", "gq", "cf", "tk", "ml", "work", "loan", "country",
 ]);

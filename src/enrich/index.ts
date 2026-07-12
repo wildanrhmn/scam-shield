@@ -1,8 +1,11 @@
 import type { Entity, Evidence } from "./types.js";
-import { extractEntities } from "./extract.js";
-import { safeBrowsing, domainAge, urlStructure } from "./url.js";
-import { goPlusAddress, goPlusPhishingSite } from "./crypto.js";
+import { extractEntities, hostOf } from "./extract.js";
+import { safeBrowsing, domainAge, urlStructure, isShortener, expandUrl } from "./url.js";
+import { goPlusAddress, goPlusPhishingSite, goPlusToken, TOKEN_CHAINS } from "./crypto.js";
 import { ofacCheck } from "./ofac.js";
+import { vtUrl, vtDomain } from "./virustotal.js";
+import { checkBrand } from "./brand.js";
+import { checkEmailHeaders } from "./email.js";
 
 export type { Evidence, Entity } from "./types.js";
 
@@ -13,36 +16,62 @@ export interface EnrichResult {
 
 // Cap per-type to bound cost/latency/abuse (a message with 100 URLs shouldn't fan out to 100 lookups).
 const MAX = 8;
+const uniq = (a: string[]) => [...new Set(a)];
 
 /**
- * Extract entities from the input and validate each against authoritative
- * sources, in parallel. Returns verified evidence (and benign confirmations).
+ * Extract entities, follow shortened links to their true destination, then
+ * validate everything against authoritative sources in parallel.
  */
 export async function enrich(text: string): Promise<EnrichResult> {
   const entities = extractEntities(text);
 
-  const urls = entities.filter((e) => e.type === "url").map((e) => e.value).slice(0, MAX);
-  const domains = entities.filter((e) => e.type === "domain").map((e) => e.value).slice(0, MAX);
-  const ethAddrs = entities.filter((e) => e.type === "eth_address").map((e) => e.value).slice(0, MAX);
-  const solAddrs = entities.filter((e) => e.type === "sol_address").map((e) => e.value).slice(0, MAX);
-  const emailDomains = entities
-    .filter((e) => e.type === "email")
-    .map((e) => e.value.split("@")[1])
-    .filter(Boolean)
-    .slice(0, MAX);
+  let urls = uniq(entities.filter((e) => e.type === "url").map((e) => e.value)).slice(0, MAX);
+  let domains = uniq(entities.filter((e) => e.type === "domain").map((e) => e.value)).slice(0, MAX);
+  const ethAddrs = uniq(entities.filter((e) => e.type === "eth_address").map((e) => e.value)).slice(0, MAX);
+  const solAddrs = uniq(entities.filter((e) => e.type === "sol_address").map((e) => e.value)).slice(0, MAX);
+  const emailDomains = uniq(entities.filter((e) => e.type === "email").map((e) => e.value.split("@")[1]).filter(Boolean)).slice(0, MAX);
 
+  const evidence: Evidence[] = [];
+
+  // Phase 1 — expand shortened links so we validate the true destination.
+  const shorteners = urls.filter(isShortener);
+  if (shorteners.length) {
+    const expanded = await Promise.allSettled(shorteners.map(expandUrl));
+    expanded.forEach((r, i) => {
+      if (r.status === "fulfilled" && r.value.hops > 0 && r.value.finalUrl !== shorteners[i]) {
+        const dest = r.value.finalUrl;
+        evidence.push({ claim: `Shortened link "${shorteners[i]}" redirects to ${dest}`, source: "redirect follow", kind: "verified", severity: "low", subject: shorteners[i] });
+        urls.push(dest);
+        const h = hostOf(dest);
+        if (h) domains.push(h);
+      }
+    });
+    urls = uniq(urls).slice(0, MAX);
+    domains = uniq(domains).slice(0, MAX);
+  }
+
+  // Phase 2 — validate everything in parallel.
   const tasks: Promise<Evidence[]>[] = [];
+  tasks.push(Promise.resolve(checkEmailHeaders(text))); // SPF/DKIM/DMARC if headers present
   if (urls.length) tasks.push(safeBrowsing(urls));
-  for (const u of urls) tasks.push(Promise.resolve(urlStructure(u)));
+  for (const u of urls) {
+    tasks.push(Promise.resolve(urlStructure(u)));
+    tasks.push(vtUrl(u));
+  }
   for (const d of domains) {
+    tasks.push(Promise.resolve(checkBrand(d)));
     tasks.push(domainAge(d));
     tasks.push(goPlusPhishingSite(d));
+    tasks.push(vtDomain(d));
   }
   for (const d of emailDomains) tasks.push(domainAge(d)); // sender-domain age
   for (const a of [...ethAddrs, ...solAddrs]) tasks.push(goPlusAddress(a));
-  for (const a of ethAddrs) tasks.push(ofacCheck(a));
+  for (const a of ethAddrs) {
+    tasks.push(ofacCheck(a));
+    for (const chain of TOKEN_CHAINS) tasks.push(goPlusToken(a, chain));
+  }
 
   const settled = await Promise.allSettled(tasks);
-  const evidence = settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  for (const r of settled) if (r.status === "fulfilled") evidence.push(...r.value);
   return { entities, evidence };
 }
