@@ -5,160 +5,319 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Scaminja — Is it legit? Know in seconds.</title>
 <meta name="description" content="Paste any message, link, email, or wallet address and get an instant Safe / Caution / Scam verdict, backed by evidence from real security databases." />
+<meta property="og:title" content="Scaminja — Is it legit? Know in seconds." />
+<meta property="og:description" content="Instant, evidence-backed Safe / Caution / Scam verdicts for any message, link, email, or wallet address." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#0a0e17; --bg2:#0e1420; --panel:#131a28; --line:#222c3d; --ink:#e8eef7; --muted:#8b98ac;
-    --safe:#2ea043; --caution:#d29922; --scam:#f85149; --accent:#4c8dff; --accent2:#39d0d8;
-    --radius:16px; --maxw:720px;
+    --bg:#05070e; --bg2:#080c16;
+    --ink:#eaf1fb; --muted:#93a1b8; --faint:#5c6a80;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.06);
+    --glass:rgba(255,255,255,.035);
+    --safe:#22c55e; --caution:#f5b544; --scam:#ff4d5e;
+    --cyan:#3fe0d0; --blue:#5b8cff; --violet:#a06bff;
+    --radius:18px; --maxw:1120px;
+    --shadow:0 30px 80px -40px rgba(0,0,0,.9);
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -200px,#16233f 0%,var(--bg) 60%);color:var(--ink);
-    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;-webkit-font-smoothing:antialiased}
-  a{color:var(--accent);text-decoration:none}
-  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 18px}
+  body{margin:0;background:var(--bg);color:var(--ink);overflow-x:hidden;
+    font:16px/1.65 "Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  h1,h2,h3,.brand-name{font-family:"Space Grotesk","Inter",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  ::selection{background:rgba(63,224,208,.28);color:#fff}
+
+  /* ---------- background layers ---------- */
+  .bg-layer{position:fixed;inset:0;z-index:-3;pointer-events:none}
+  .bg-base{background:
+    radial-gradient(1000px 700px at 78% -10%, rgba(91,140,255,.14), transparent 60%),
+    radial-gradient(900px 700px at 10% 5%, rgba(63,224,208,.12), transparent 55%),
+    radial-gradient(1200px 900px at 50% 110%, rgba(160,107,255,.10), transparent 60%),
+    var(--bg)}
+  .aurora{position:fixed;inset:-30% -10% auto -10%;height:120vh;z-index:-2;pointer-events:none;filter:blur(90px);opacity:.6}
+  .aurora i{position:absolute;display:block;border-radius:50%;mix-blend-mode:screen;will-change:transform}
+  .aurora .a1{width:52vw;height:52vw;left:-6vw;top:-8vh;background:radial-gradient(circle at 50% 50%,rgba(63,224,208,.55),transparent 65%);animation:drift1 20s ease-in-out infinite}
+  .aurora .a2{width:46vw;height:46vw;right:-4vw;top:-14vh;background:radial-gradient(circle at 50% 50%,rgba(91,140,255,.55),transparent 65%);animation:drift2 26s ease-in-out infinite}
+  .aurora .a3{width:40vw;height:40vw;left:32vw;top:6vh;background:radial-gradient(circle at 50% 50%,rgba(160,107,255,.42),transparent 65%);animation:drift3 32s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vw,6vh) scale(1.12)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-7vw,9vh) scale(.92)}}
+  @keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,-6vh) scale(1.15)}}
+  #particles{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55}
+  .grid-mask{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+    background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:64px 64px;
+    -webkit-mask-image:radial-gradient(900px 600px at 50% 8%,#000,transparent 75%);
+            mask-image:radial-gradient(900px 600px at 50% 8%,#000,transparent 75%)}
+  .cursor-glow{position:fixed;top:0;left:0;width:460px;height:460px;border-radius:50%;z-index:-1;pointer-events:none;
+    transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(63,224,208,.10),transparent 60%);opacity:0;transition:opacity .4s}
+
+  /* ---------- layout ---------- */
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
   /* nav */
-  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
-  .brand .logo{font-size:24px}
-  .okx{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 22px;max-width:var(--maxw);margin:0 auto;transition:padding .3s}
+  .nav-shell{position:sticky;top:0;z-index:50;transition:background .3s,backdrop-filter .3s,border-color .3s;border-bottom:1px solid transparent}
+  .nav-shell.scrolled{background:rgba(6,9,16,.72);backdrop-filter:blur(14px);border-bottom-color:var(--line2)}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:19px;letter-spacing:-.01em}
+  .brand .logo{font-size:24px;filter:drop-shadow(0 2px 8px rgba(63,224,208,.5))}
+  .brand-name{background:linear-gradient(100deg,#fff 20%,#bfe9ff 40%,#fff 60%);background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
+  @keyframes shine{to{background-position:200% center}}
+  .okx{font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+    background:var(--glass);backdrop-filter:blur(8px);transition:border-color .25s,color .25s}
+  .okx:hover{border-color:rgba(63,224,208,.5);color:var(--ink)}
   .okx b{color:var(--ink)}
+
   /* hero */
-  .hero{text-align:center;padding:34px 0 10px}
-  .hero h1{font-size:40px;line-height:1.1;margin:8px 0 12px;letter-spacing:-.03em}
-  .hero h1 .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .hero p.sub{color:var(--muted);font-size:17px;max-width:560px;margin:0 auto 22px}
-  /* checker */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 20px 60px -30px rgba(0,0,0,.7)}
-  textarea{width:100%;min-height:104px;resize:vertical;background:#0c111b;color:var(--ink);border:1px solid var(--line);
-    border-radius:12px;padding:12px 14px;font:inherit;outline:none}
-  textarea:focus{border-color:var(--accent)}
-  .row{display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap}
-  button{cursor:pointer;border:0;border-radius:10px;font:inherit;font-weight:600}
-  .go{background:linear-gradient(90deg,var(--accent),#3f7ce6);color:#fff;padding:12px 22px;font-size:15px}
-  .go:disabled{opacity:.6;cursor:default}
-  .chips{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-  .chips .label{color:var(--muted);font-size:13px;align-self:center}
-  .chip{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500;font-size:13px;padding:7px 12px;border-radius:999px}
-  .chip:hover{color:var(--ink);border-color:var(--accent)}
-  #out{margin-top:16px}
+  .hero{text-align:center;padding:64px 0 22px;position:relative}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);
+    border:1px solid var(--line);background:var(--glass);border-radius:999px;padding:7px 15px;margin-bottom:26px;backdrop-filter:blur(8px)}
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 0 rgba(63,224,208,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,224,208,.55)}70%{box-shadow:0 0 0 9px rgba(63,224,208,0)}100%{box-shadow:0 0 0 0 rgba(63,224,208,0)}}
+  .hero h1{font-size:clamp(38px,6.4vw,72px);line-height:1.04;margin:0 0 18px;letter-spacing:-.035em;font-weight:700}
+  .hero h1 .line{display:block}
+  .hero h1 .ch{display:inline-block;will-change:transform,opacity,filter}
+  .grad{background:linear-gradient(96deg,var(--cyan),var(--blue) 55%,var(--violet));background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;animation:hue 8s ease-in-out infinite}
+  @keyframes hue{0%,100%{background-position:0% center}50%{background-position:100% center}}
+  .hero p.sub{color:var(--muted);font-size:clamp(16px,2vw,19px);max-width:600px;margin:0 auto 34px;line-height:1.6}
+  .hero p.sub b{color:var(--ink);font-weight:600}
+
+  /* checker card */
+  .stage{perspective:1400px}
+  .card{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);backdrop-filter:blur(16px);max-width:680px;margin:0 auto;overflow:hidden}
+  .card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
+    background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(63,224,208,.14),transparent 45%)}
+  .card:hover::before{opacity:1}
+  .card::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(120deg,rgba(63,224,208,.5),transparent 30%,transparent 70%,rgba(91,140,255,.5));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5}
+  textarea{position:relative;width:100%;min-height:118px;resize:vertical;background:rgba(4,7,13,.6);color:var(--ink);
+    border:1px solid var(--line);border-radius:13px;padding:14px 16px;font:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+  textarea::placeholder{color:var(--faint)}
+  textarea:focus{border-color:rgba(63,224,208,.6);box-shadow:0 0 0 4px rgba(63,224,208,.1)}
+  .row{display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap;position:relative}
+  button{cursor:pointer;border:0;border-radius:12px;font:inherit;font-weight:600}
+  .go{position:relative;background:linear-gradient(100deg,var(--cyan),var(--blue));color:#04121a;padding:13px 26px;font-size:15px;
+    font-weight:700;letter-spacing:.01em;box-shadow:0 10px 30px -10px rgba(63,224,208,.6);transition:transform .15s,box-shadow .25s;will-change:transform}
+  .go:hover{box-shadow:0 14px 40px -8px rgba(63,224,208,.8)}
+  .go:active{transform:scale(.97)}
+  .go:disabled{opacity:.55;cursor:default;box-shadow:none}
+  .go .lbl{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px}
+  .tag{color:var(--muted);font-size:13px}
+  .chips{margin-top:16px;display:flex;gap:9px;flex-wrap:wrap;justify-content:center;align-items:center}
+  .chips .label{color:var(--muted);font-size:13px}
+  .chip{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500;font-size:13px;padding:8px 13px;border-radius:999px;transition:.2s}
+  .chip:hover{color:var(--ink);border-color:rgba(63,224,208,.55);background:rgba(63,224,208,.06);transform:translateY(-1px)}
+  #out{margin-top:18px}
+
   /* verdict */
-  .verdict{border-radius:var(--radius);border:1px solid var(--line);overflow:hidden;background:#0c111b}
-  .vhead{display:flex;align-items:center;gap:14px;padding:16px 18px}
-  .badge{font-weight:800;letter-spacing:.04em;font-size:14px;padding:6px 12px;border-radius:999px;color:#fff;white-space:nowrap}
-  .b-safe{background:var(--safe)} .b-caution{background:var(--caution)} .b-scam{background:var(--scam)}
-  .vtitle{font-weight:700;font-size:16px;margin:0}
-  .vbody{padding:0 18px 18px}
-  .summary{margin:2px 0 14px}
-  .meter{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin:4px 0 16px}
-  .meter>span{display:block;height:100%}
-  h4{margin:16px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-  .flags,.evlist{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:8px}
-  .flag,.ev{display:flex;gap:10px;align-items:flex-start;font-size:14px}
-  .sev{font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:6px;margin-top:1px;white-space:nowrap}
-  .s-high{background:rgba(248,81,73,.16);color:var(--scam)} .s-medium{background:rgba(210,153,34,.16);color:var(--caution)} .s-low{background:rgba(139,152,169,.16);color:var(--muted)}
+  .verdict{position:relative;border-radius:var(--radius);border:1px solid var(--line);overflow:hidden;background:rgba(4,7,13,.55)}
+  .verdict.lv-safe{box-shadow:0 0 0 1px rgba(34,197,94,.35),0 20px 50px -30px rgba(34,197,94,.5)}
+  .verdict.lv-caution{box-shadow:0 0 0 1px rgba(245,181,68,.35),0 20px 50px -30px rgba(245,181,68,.5)}
+  .verdict.lv-scam{box-shadow:0 0 0 1px rgba(255,77,94,.4),0 20px 50px -30px rgba(255,77,94,.55)}
+  .vhead{display:flex;align-items:center;gap:14px;padding:17px 19px}
+  .badge{font-weight:800;letter-spacing:.05em;font-size:13.5px;padding:7px 13px;border-radius:999px;color:#04121a;white-space:nowrap}
+  .b-safe{background:var(--safe)} .b-caution{background:var(--caution)} .b-scam{background:var(--scam);color:#fff}
+  .vtitle{font-weight:700;font-size:16px;margin:0;line-height:1.4}
+  .vbody{padding:0 19px 19px}
+  .summary{margin:2px 0 15px}
+  .meter{height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:4px 0 8px}
+  .meter>span{display:block;height:100%;border-radius:999px}
+  .metanum{color:var(--muted);font-size:13px;margin:0 0 14px}
+  h4{margin:17px 0 9px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  .flags,.evlist{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:9px}
+  .flag,.ev{display:flex;gap:11px;align-items:flex-start;font-size:14px}
+  .sev{font-size:10.5px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:7px;margin-top:1px;white-space:nowrap}
+  .s-high{background:rgba(255,77,94,.16);color:var(--scam)} .s-medium{background:rgba(245,181,68,.16);color:var(--caution)} .s-low{background:rgba(139,152,169,.16);color:var(--muted)}
   .ev-ic{margin-top:1px;font-weight:700}.ev-clean .ev-ic{color:var(--safe)}.ev-bad .ev-ic{color:var(--scam)}
-  .ev-src{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:4px;white-space:nowrap}
-  .actions{margin:0;padding-left:18px;font-size:14px}.actions li{margin:5px 0}
-  .disc{color:var(--muted);font-size:12px;margin-top:14px}
+  .ev-src{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+  .actions{margin:0;padding-left:19px;font-size:14px}.actions li{margin:6px 0}
+  .disc{color:var(--faint);font-size:12px;margin-top:15px}
   .err{color:var(--scam)}
-  /* trust bar */
-  .trust{margin:30px 0;text-align:center}
-  .trust .t-label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-  .sources{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-  .src{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 13px;font-size:13px;color:var(--ink)}
-  .src span{color:var(--muted)}
+  .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* stats strip */
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:56px auto 0;max-width:900px}
+  @media(min-width:720px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat{text-align:center;padding:18px 12px;border:1px solid var(--line2);border-radius:14px;background:var(--glass);backdrop-filter:blur(8px)}
+  .stat .num{font-family:"Space Grotesk";font-size:30px;font-weight:700;line-height:1;
+    background:linear-gradient(100deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .lab{color:var(--muted);font-size:12.5px;margin-top:7px}
+
   /* sections */
-  section{padding:34px 0;border-top:1px solid var(--line)}
-  section h2{font-size:24px;letter-spacing:-.02em;margin:0 0 6px;text-align:center}
-  section .lede{color:var(--muted);text-align:center;margin:0 auto 24px;max-width:520px}
-  .steps{display:grid;grid-template-columns:1fr;gap:14px}
-  @media(min-width:640px){.steps{grid-template-columns:1fr 1fr 1fr}}
-  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
-  .step .n{width:28px;height:28px;border-radius:8px;background:rgba(76,141,255,.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:10px}
-  .step b{display:block;margin-bottom:4px}
-  .step p{margin:0;color:var(--muted);font-size:14px}
-  pre{background:#0c111b;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.5}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  .kv{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;color:var(--muted);font-size:14px;margin-top:14px}
-  .kv b{color:var(--ink)}
-  footer{padding:28px 0 46px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+  section{padding:78px 0;position:relative}
+  .kicker{text-align:center;color:var(--cyan);font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px}
+  section h2{font-size:clamp(26px,4vw,38px);letter-spacing:-.025em;margin:0 0 12px;text-align:center;font-weight:700}
+  section .lede{color:var(--muted);text-align:center;margin:0 auto 40px;max-width:600px;font-size:16.5px}
+
+  /* trust */
+  .sources{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:820px;margin:0 auto}
+  .src{position:relative;border:1px solid var(--line);background:var(--glass);border-radius:12px;padding:11px 16px;font-size:14px;color:var(--ink);
+    backdrop-filter:blur(8px);overflow:hidden;transition:transform .2s,border-color .2s}
+  .src::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;
+    background:radial-gradient(180px circle at var(--mx,50%) var(--my,50%),rgba(63,224,208,.16),transparent 45%)}
+  .src:hover{transform:translateY(-2px);border-color:rgba(63,224,208,.4)}
+  .src:hover::before{opacity:1}
+  .src span{color:var(--muted)}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:1fr;gap:18px;max-width:1000px;margin:0 auto}
+  @media(min-width:760px){.steps{grid-template-columns:repeat(3,1fr)}}
+  .step{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:24px;overflow:hidden;
+    backdrop-filter:blur(10px);transition:transform .25s,border-color .25s;transform-style:preserve-3d}
+  .step::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;
+    background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(91,140,255,.14),transparent 45%)}
+  .step:hover{border-color:rgba(91,140,255,.4)}
+  .step:hover::before{opacity:1}
+  .step .n{position:relative;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-family:"Space Grotesk";font-weight:700;font-size:16px;margin-bottom:16px;color:var(--cyan);
+    background:rgba(63,224,208,.12);border:1px solid rgba(63,224,208,.25)}
+  .step b{position:relative;display:block;margin-bottom:7px;font-size:17px;font-weight:600}
+  .step p{position:relative;margin:0;color:var(--muted);font-size:14.5px}
+
+  /* agents / code */
+  .agents-grid{max-width:900px;margin:0 auto}
+  .codewrap{position:relative}
+  pre{background:rgba(4,7,13,.7);border:1px solid var(--line);border-radius:14px;padding:18px 16px;overflow-x:auto;font-size:13px;line-height:1.6;
+    backdrop-filter:blur(8px)}
+  code{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace}
+  .tok-c{color:var(--cyan)} .tok-s{color:#9be29b} .tok-m{color:var(--faint)}
+  .copy{position:absolute;top:11px;right:11px;background:var(--glass);border:1px solid var(--line);color:var(--muted);
+    font-size:12px;padding:6px 11px;border-radius:8px;transition:.2s}
+  .copy:hover{color:var(--ink);border-color:rgba(63,224,208,.5)}
+  .kv{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}
+  @media(min-width:720px){.kv{grid-template-columns:repeat(4,1fr)}}
+  .kv div{border:1px solid var(--line2);border-radius:12px;padding:14px;background:var(--glass);text-align:center;font-size:13px;color:var(--muted)}
+  .kv b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-bottom:3px}
+
+  footer{padding:44px 0 60px;text-align:center;color:var(--muted);font-size:13.5px;border-top:1px solid var(--line2);margin-top:40px}
+  footer a{color:var(--cyan)}
+  footer .fbrand{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin-bottom:12px;font-size:16px}
+
+  /* reveal (JS-gated so content stays visible if JS/gsap fails) */
+  .js .reveal{opacity:0;transform:translateY(26px)}
+  @media (prefers-reduced-motion:reduce){
+    .aurora .a1,.aurora .a2,.aurora .a3,.eyebrow .dot,.brand-name,.grad{animation:none}
+    .js .reveal{opacity:1;transform:none}
+    #particles,.cursor-glow{display:none}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="bg-layer bg-base"></div>
+<div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+<canvas id="particles"></canvas>
+<div class="grid-mask"></div>
+<div class="cursor-glow" id="cglow"></div>
+
+<div class="nav-shell" id="navshell">
   <nav>
-    <div class="brand"><span class="logo">🥷</span> Scaminja</div>
+    <div class="brand"><span class="logo">🥷</span> <span class="brand-name">Scaminja</span></div>
     <a class="okx" href="https://www.okx.ai" target="_blank" rel="noopener">Agentic Service Provider on <b>OKX.AI</b></a>
   </nav>
+</div>
 
+<div class="wrap">
   <header class="hero">
-    <h1>Is it legit? <span class="grad">Know in seconds.</span></h1>
-    <p class="sub">Paste any message, link, email, or crypto wallet address — get an instant <b>Safe / Caution / Scam</b> verdict, backed by evidence from real security databases.</p>
+    <span class="eyebrow"><span class="dot"></span> AI-powered scam &amp; fraud detection</span>
+    <h1><span class="line" data-split>Is it legit?</span> <span class="line grad">Know in seconds.</span></h1>
+    <p class="sub">Paste any message, link, email, or crypto wallet address — get an instant <b>Safe · Caution · Scam</b> verdict, backed by evidence from real security databases.</p>
 
-    <div class="card">
-      <textarea id="in" placeholder="Paste a suspicious text, link, email, or wallet address…"></textarea>
-      <div class="row"><button class="go" id="go">Check it</button>
-        <span class="tag" style="color:var(--muted);font-size:13px">Free to try · no account needed</span>
+    <div class="stage">
+      <div class="card" id="checker">
+        <textarea id="in" placeholder="Paste a suspicious text, link, email, or wallet address…"></textarea>
+        <div class="row">
+          <button class="go" id="go"><span class="lbl">Check it</span></button>
+          <span class="tag">Free to try · no account needed</span>
+        </div>
+        <div class="chips">
+          <span class="label">Try:</span>
+          <button class="chip" data-s="ROYAL MAIL: Your parcel has a £1.99 unpaid shipping fee. Pay within 24h or it returns to sender: https://royalmail-redelivery.info/pay">Parcel SMS</button>
+          <button class="chip" data-s="🎉 You are eligible for the OKB community airdrop (2,500 OKB). Connect your wallet to claim before it expires: https://okb-airdrop-claim.xyz — verify your seed phrase to receive tokens.">Crypto airdrop</button>
+          <button class="chip" data-s="Hi! We reviewed your profile and want to offer you a remote data-entry role, $450/day, no interview. To onboard, please pay a $50 refundable equipment deposit via gift card and send the code.">Job offer</button>
+          <button class="chip" data-s="Hey, running 10 mins late for lunch — grab us a table and I'll be right there!">Benign text</button>
+        </div>
+        <div id="out"></div>
       </div>
-      <div class="chips">
-        <span class="label">Try:</span>
-        <button class="chip" data-s="ROYAL MAIL: Your parcel has a £1.99 unpaid shipping fee. Pay within 24h or it returns to sender: https://royalmail-redelivery.info/pay">Parcel SMS</button>
-        <button class="chip" data-s="🎉 You are eligible for the OKB community airdrop (2,500 OKB). Connect your wallet to claim before it expires: https://okb-airdrop-claim.xyz — verify your seed phrase to receive tokens.">Crypto airdrop</button>
-        <button class="chip" data-s="Hi! We reviewed your profile and want to offer you a remote data-entry role, $450/day, no interview. To onboard, please pay a $50 refundable equipment deposit via gift card and send the code.">Job offer</button>
-        <button class="chip" data-s="Hey, running 10 mins late for lunch — grab us a table and I'll be right there!">Benign text</button>
-      </div>
-      <div id="out"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="6" data-suffix="">6</div><div class="lab">live threat databases</div></div>
+      <div class="stat"><div class="num" data-count="70" data-suffix="+">70+</div><div class="lab">AV vendors via VirusTotal</div></div>
+      <div class="stat"><div class="num" data-count="3" data-suffix="">3</div><div class="lab">clear verdict levels</div></div>
+      <div class="stat"><div class="num" data-count="0" data-suffix="" data-text="0.02">0.02</div><div class="lab">USDT per agent call</div></div>
     </div>
   </header>
 
-  <div class="trust">
-    <div class="t-label">Every verdict is checked against</div>
+  <section id="trust">
+    <p class="kicker reveal">Evidence engine</p>
+    <h2 class="reveal">Every verdict is checked against real sources</h2>
+    <p class="lede reveal">No black-box guessing. Scaminja verifies each link, address, and email against authoritative security databases — live, on every request.</p>
     <div class="sources">
-      <div class="src">Google <span>Safe Browsing</span></div>
-      <div class="src">VirusTotal <span>70+ vendors</span></div>
-      <div class="src">GoPlus <span>on-chain security</span></div>
-      <div class="src">OFAC <span>sanctions</span></div>
-      <div class="src">RDAP <span>domain age</span></div>
-      <div class="src"><span>brand & typosquat checks</span></div>
-    </div>
-  </div>
-
-  <section>
-    <h2>Evidence, not opinion</h2>
-    <p class="lede">Most "is this a scam?" tools just guess. Scaminja extracts every link, address, and email, verifies each against authoritative databases, and shows you the proof — tagged <b>verified fact</b> vs <b>assessment</b>.</p>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><b>Extract</b><p>Pulls out URLs, domains, wallet addresses, tokens, and email senders from anything you paste.</p></div>
-      <div class="step"><div class="n">2</div><b>Verify</b><p>Checks each against Safe Browsing, VirusTotal, GoPlus, OFAC, domain records, and more — live.</p></div>
-      <div class="step"><div class="n">3</div><b>Verdict</b><p>A clear Safe / Caution / Scam call with the red flags, the evidence, and what to do next.</p></div>
+      <div class="src reveal">Google <span>Safe Browsing</span></div>
+      <div class="src reveal">VirusTotal <span>70+ vendors</span></div>
+      <div class="src reveal">GoPlus <span>on-chain security</span></div>
+      <div class="src reveal">OFAC <span>sanctions list</span></div>
+      <div class="src reveal">RDAP <span>domain age</span></div>
+      <div class="src reveal">Brand <span>&amp; typosquat checks</span></div>
     </div>
   </section>
 
-  <section>
-    <h2>Built for agents, too</h2>
-    <p class="lede">Scaminja is a paid, callable service in the agent economy — any AI agent can rent a scam check on demand and get structured JSON back.</p>
-    <pre><code>curl -X POST https://api.progena.xyz/scaminja/analyze \
-  -H "content-type: application/json" \
-  -d '{"text":"is this a scam? …"}'
-# → HTTP 402: pay 0.02 USDT on X Layer (x402), then receive the verdict</code></pre>
-    <div class="kv">
-      <div><b>Protocol</b> x402 (A2MCP)</div>
-      <div><b>Price</b> 0.02 USDT / call</div>
-      <div><b>Network</b> X Layer</div>
-      <div><b>Output</b> structured verdict + evidence</div>
+  <section id="how">
+    <p class="kicker reveal">How it works</p>
+    <h2 class="reveal">Evidence, not opinion</h2>
+    <p class="lede reveal">Most "is this a scam?" tools just guess. Scaminja extracts every link, address, and email, verifies each against authoritative databases, and shows you the proof — tagged <b>verified fact</b> vs <b>assessment</b>.</p>
+    <div class="steps">
+      <div class="step reveal"><div class="n">1</div><b>Extract</b><p>Pulls out URLs, domains, wallet addresses, tokens, and email senders from anything you paste — text or screenshot.</p></div>
+      <div class="step reveal"><div class="n">2</div><b>Verify</b><p>Checks each entity against Safe Browsing, VirusTotal, GoPlus, OFAC, domain records, and brand look-alike detection — in parallel, in real time.</p></div>
+      <div class="step reveal"><div class="n">3</div><b>Verdict</b><p>A clear Safe / Caution / Scam call with the red flags, the cited evidence, and exactly what to do next.</p></div>
+    </div>
+  </section>
+
+  <section id="agents">
+    <p class="kicker reveal">For the agent economy</p>
+    <h2 class="reveal">Built for agents, too</h2>
+    <p class="lede reveal">Scaminja is a paid, callable service any AI agent can rent on demand — pay per call, get structured JSON back. Settled on-chain via the x402 standard.</p>
+    <div class="agents-grid reveal">
+      <div class="codewrap">
+        <button class="copy" id="copy">Copy</button>
+<pre><code id="snippet"><span class="tok-c">curl</span> -X POST <span class="tok-s">https://api.progena.xyz/scaminja/analyze</span> \
+  -H <span class="tok-s">"content-type: application/json"</span> \
+  -d <span class="tok-s">'{"text":"is this a scam? …"}'</span>
+<span class="tok-m"># → HTTP 402: pay 0.02 USDT on X Layer (x402), then receive the verdict</span></code></pre>
+      </div>
+      <div class="kv">
+        <div><b>x402</b>A2MCP protocol</div>
+        <div><b>0.02 USDT</b>per call</div>
+        <div><b>X Layer</b>settlement network</div>
+        <div><b>JSON</b>verdict + evidence</div>
+      </div>
     </div>
   </section>
 
   <footer>
-    Risk guidance, not a guarantee — always verify independently. Scaminja does not store the content you submit.<br/>
-    An Agentic Service Provider on <a href="https://www.okx.ai" target="_blank" rel="noopener">OKX.AI</a>.
+    <div class="fbrand"><span>🥷</span> <span class="brand-name">Scaminja</span></div>
+    <div>Risk guidance, not a guarantee — always verify independently. Scaminja does not store the content you submit.</div>
+    <div style="margin-top:8px">An Agentic Service Provider on <a href="https://www.okx.ai" target="_blank" rel="noopener">OKX.AI</a>.</div>
   </footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script>
+document.documentElement.classList.add("js");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
+
+/* ---------------- checker logic (functional core) ---------------- */
 const inp = $("#in"), out = $("#out"), go = $("#go");
-// /try (free) is a sibling of this page; works whether served at "/" or behind a prefix.
 const base = location.pathname.replace(/\/(demo\/?|index\.html)?$/, "");
 const ANALYZE = (base || "") + "/try";
 const COLOR = { safe:"var(--safe)", caution:"var(--caution)", scam:"var(--scam)" };
@@ -170,11 +329,12 @@ go.onclick = check;
 async function check(){
   const text = inp.value.trim();
   if(!text) return;
-  go.disabled = true; out.innerHTML = `<p class="tag" style="color:var(--muted);margin-top:14px">Analyzing…</p>`;
+  go.disabled = true;
+  out.innerHTML = `<p class="tag" style="margin-top:16px"><span class="spinner"></span>Analyzing…</p>`;
   try{
     const r = await fetch(ANALYZE, {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})});
     render(await r.json());
-  }catch(e){ out.innerHTML = `<p class="err">Couldn't reach the analyzer. ${esc(e.message||e)}</p>`; }
+  }catch(e){ out.innerHTML = `<p class="err" style="margin-top:14px">Couldn't reach the analyzer. ${esc(e.message||e)}</p>`; }
   finally{ go.disabled = false; }
 }
 
@@ -189,12 +349,13 @@ function render(v){
     return `<li class="ev ${clean?"ev-clean":"ev-bad"}"><span class="ev-ic">${clean?"✓":"⚠"}</span>`
       + `<span>${esc(e.claim)} <span class="ev-src">${esc(e.source)}</span></span></li>`;
   }).join("");
+  const risk = Math.max(2,Math.min(100,v.risk_score||0));
   out.innerHTML = `
-    <div class="verdict">
+    <div class="verdict lv-${esc(level)}">
       <div class="vhead"><span class="badge b-${esc(level)}">${esc(level.toUpperCase())}</span><p class="vtitle">${esc(v.title||"")}</p></div>
       <div class="vbody">
-        <div class="meter"><span style="width:${Math.max(2,Math.min(100,v.risk_score||0))}%;background:${COLOR[level]}"></span></div>
-        <p class="tag" style="color:var(--muted);margin:-8px 0 12px">Risk ${esc(v.risk_score)}/100 · Confidence ${esc(v.confidence)}%</p>
+        <div class="meter"><span style="width:0%;background:${COLOR[level]}"></span></div>
+        <p class="metanum">Risk ${esc(v.risk_score)}/100 · Confidence ${esc(v.confidence)}%</p>
         <p class="summary">${esc(v.summary||"")}</p>
         ${ev ? `<h4>Verified against live sources</h4><ul class="evlist">${ev}</ul>`:""}
         ${flags ? `<h4>Red flags (assessment)</h4><ul class="flags">${flags}</ul>`:""}
@@ -202,6 +363,145 @@ function render(v){
         <p class="disc">${esc(v.disclaimer||"")}</p>
       </div>
     </div>`;
+  const card = out.querySelector(".verdict"), bar = out.querySelector(".meter>span");
+  if(window.gsap && !reduce){
+    gsap.from(card,{y:16,opacity:0,duration:.5,ease:"power3.out"});
+    gsap.to(bar,{width:risk+"%",duration:.9,ease:"power3.out",delay:.1});
+  }else{ bar.style.width = risk+"%"; }
+}
+
+/* ---------------- copy button ---------------- */
+$("#copy").onclick = () => {
+  const t = $("#snippet").innerText;
+  navigator.clipboard?.writeText(t).then(()=>{ const b=$("#copy"); b.textContent="Copied ✓"; setTimeout(()=>b.textContent="Copy",1600); });
+};
+
+/* ---------------- nav shell on scroll ---------------- */
+const navshell = $("#navshell");
+addEventListener("scroll",()=>navshell.classList.toggle("scrolled",scrollY>12),{passive:true});
+
+/* ---------------- cursor glow + magnetic + spotlight ---------------- */
+if(!reduce && matchMedia("(pointer:fine)").matches){
+  const cg = $("#cglow");
+  addEventListener("mousemove",e=>{
+    cg.style.opacity=1; cg.style.left=e.clientX+"px"; cg.style.top=e.clientY+"px";
+  },{passive:true});
+
+  // magnetic button
+  const mag = go, strength = .3;
+  mag.addEventListener("mousemove",e=>{
+    const r=mag.getBoundingClientRect();
+    const x=(e.clientX-r.left-r.width/2)*strength, y=(e.clientY-r.top-r.height/2)*strength;
+    mag.style.transform=`translate(${x}px,${y}px)`;
+  });
+  mag.addEventListener("mouseleave",()=>{ mag.style.transform=""; });
+
+  // spotlight (mouse-follow glow position) for cards
+  document.querySelectorAll("#checker,.src,.step").forEach(el=>{
+    el.addEventListener("mousemove",e=>{
+      const r=el.getBoundingClientRect();
+      el.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");
+      el.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");
+    });
+  });
+
+  // subtle 3D tilt on step cards
+  document.querySelectorAll(".step").forEach(el=>{
+    el.addEventListener("mousemove",e=>{
+      const r=el.getBoundingClientRect();
+      const rx=((e.clientY-r.top)/r.height-.5)*-6, ry=((e.clientX-r.left)/r.width-.5)*6;
+      el.style.transform=`perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+    });
+    el.addEventListener("mouseleave",()=>{ el.style.transform=""; });
+  });
+}
+
+/* ---------------- particle constellation ---------------- */
+(function(){
+  const cv = $("#particles"); if(!cv || reduce) return;
+  const ctx = cv.getContext("2d");
+  let w,h,dpr,pts,mouse={x:-999,y:-999},raf;
+  function size(){
+    dpr=Math.min(devicePixelRatio||1,2); w=cv.width=innerWidth*dpr; h=cv.height=innerHeight*dpr;
+    cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
+    const n=Math.min(90,Math.floor(innerWidth*innerHeight/16000));
+    pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.28*dpr,vy:(Math.random()-.5)*.28*dpr}));
+  }
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    const R=130*dpr;
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>w)p.vx*=-1; if(p.y<0||p.y>h)p.vy*=-1;
+      const dx=p.x-mouse.x, dy=p.y-mouse.y, md=Math.hypot(dx,dy);
+      if(md<120*dpr){ p.x+=dx/md*1.2; p.y+=dy/md*1.2; }
+    }
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a=pts[i],b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<R){ ctx.strokeStyle=`rgba(63,224,208,${(1-d/R)*.22})`; ctx.lineWidth=dpr; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+      }
+    }
+    for(const p of pts){ ctx.fillStyle="rgba(150,200,255,.55)"; ctx.beginPath(); ctx.arc(p.x,p.y,1.4*dpr,0,7); ctx.fill(); }
+    raf=requestAnimationFrame(draw);
+  }
+  addEventListener("mousemove",e=>{mouse.x=e.clientX*dpr;mouse.y=e.clientY*dpr;},{passive:true});
+  addEventListener("mouseleave",()=>{mouse.x=mouse.y=-9999;});
+  let to; addEventListener("resize",()=>{clearTimeout(to);to=setTimeout(size,200);});
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden){cancelAnimationFrame(raf);} else{ draw(); } });
+  size(); draw();
+})();
+
+/* ---------------- GSAP: hero split reveal + scroll reveals + counters ---------------- */
+if(window.gsap){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // split the first headline line into chars
+  const line1 = document.querySelector("h1 .line[data-split]");
+  if(line1){
+    const chars = line1.textContent.split("");
+    line1.innerHTML = chars.map(c => c===" " ? " " : `<span class="ch">${c}</span>`).join("");
+  }
+  const gradLine = document.querySelector("h1 .grad");
+
+  if(!reduce){
+    // hero intro — .from() reads each element's natural (visible) state as the
+    // destination and applies the hidden start immediately (no flash).
+    const tl = gsap.timeline({defaults:{ease:"power3.out"}});
+    tl.from(".eyebrow",{y:14,opacity:0,duration:.6})
+      .from("h1 .ch",{yPercent:120,opacity:0,filter:"blur(6px)",duration:.7,stagger:0.028},"-=0.3")
+      .from(gradLine,{y:24,opacity:0,filter:"blur(10px)",duration:.8},"-=0.35")
+      .from(".hero .sub",{y:16,opacity:0,duration:.6},"-=0.45")
+      .from(".stage",{y:26,opacity:0,duration:.8},"-=0.35")
+      .from(".stats .stat",{y:20,opacity:0,duration:.5,stagger:.08},"-=0.4");
+
+    // scroll reveals for below-fold elements (start hidden via .js .reveal css)
+    document.querySelectorAll("section .reveal, footer .reveal").forEach(el=>{
+      gsap.to(el,{opacity:1,y:0,duration:.7,ease:"power3.out",
+        scrollTrigger:{trigger:el,start:"top 88%"}});
+    });
+
+    // count-up
+    document.querySelectorAll("[data-count]").forEach(el=>{
+      const end=parseFloat(el.dataset.count), txt=el.dataset.text, suf=el.dataset.suffix||"";
+      const obj={v:0};
+      ScrollTrigger.create({trigger:el,start:"top 90%",once:true,onEnter:()=>{
+        if(txt){ // fixed decimal label (e.g. 0.02)
+          gsap.fromTo(obj,{v:0},{v:parseFloat(txt),duration:1.1,ease:"power2.out",
+            onUpdate:()=>el.textContent=obj.v.toFixed(2)+suf});
+        }else{
+          gsap.fromTo(obj,{v:0},{v:end,duration:1.1,ease:"power2.out",
+            onUpdate:()=>el.textContent=Math.round(obj.v)+suf});
+        }
+      }});
+    });
+  }else{
+    document.querySelectorAll(".reveal").forEach(el=>{el.style.opacity=1;el.style.transform="none";});
+  }
+}
+// hard fallback: if gsap failed to load, never leave reveal elements hidden
+if(!window.gsap){
+  document.querySelectorAll(".reveal").forEach(el=>{el.style.opacity=1;el.style.transform="none";});
 }
 </script>
 </body>
