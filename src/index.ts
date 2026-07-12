@@ -70,9 +70,8 @@ async function main() {
 
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
-  app.post("/analyze", limiter, async (req, res) => {
+  const analyzeHandler = async (req: express.Request, res: express.Response) => {
     const start = Date.now();
-
     let input;
     try {
       input = validateInput(req.body);
@@ -80,18 +79,21 @@ async function main() {
       if (e instanceof ValidationError) return res.status(400).json({ error: e.message });
       throw e;
     }
-
     try {
       const verdict = await analyze(input);
-      console.log(`[analyze] ${verdict.verdict} risk=${verdict.risk_score} ${Date.now() - start}ms`);
+      console.log(`[analyze] ${verdict.verdict} risk=${verdict.risk_score} ev=${verdict.evidence.length} ${Date.now() - start}ms`);
       res.json(verdict);
     } catch (err) {
-      // Log full detail server-side; never leak internal errors (keys, credit
-      // status, upstream messages) to the caller.
+      // Log full detail server-side; never leak internal errors to the caller.
       console.error(`[analyze] failed after ${Date.now() - start}ms:`, err instanceof Error ? err.message : err);
       res.status(503).json(cautionBody("We couldn't complete the check right now. Treat this as unverified and try again shortly."));
     }
-  });
+  };
+
+  // Paid A2MCP endpoint (x402-gated by the payment middleware above) — for agents.
+  app.post("/analyze", limiter, analyzeHandler);
+  // Free, rate-limited path for the human demo/website (not a marketplace service).
+  app.post("/try", limiter, analyzeHandler);
 
   // Unknown routes → clean JSON 404.
   app.use((_req, res) => res.status(404).json({ error: "Not found." }));

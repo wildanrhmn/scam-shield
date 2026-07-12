@@ -49,6 +49,12 @@
   .s-high{background:rgba(248,81,73,.16);color:var(--scam)} .s-medium{background:rgba(210,153,34,.16);color:var(--caution)} .s-low{background:rgba(139,152,169,.16);color:var(--muted)}
   .actions{margin:0;padding-left:18px;font-size:14px;color:var(--ink)}
   .actions li{margin:5px 0}
+  .evlist{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:7px}
+  .ev{display:flex;gap:9px;align-items:flex-start;font-size:14px}
+  .ev-ic{margin-top:1px;font-weight:700}
+  .ev-clean .ev-ic{color:var(--safe)}
+  .ev-bad .ev-ic{color:var(--scam)}
+  .ev-src{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:4px;white-space:nowrap}
   h4{margin:16px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
   .disc{color:var(--muted);font-size:12px;margin-top:14px}
   .err{color:var(--scam)}
@@ -81,7 +87,7 @@ const $ = s => document.querySelector(s);
 const inp = $("#in"), out = $("#out"), go = $("#go");
 // Resolve the API path so the demo works whether it's served at "/demo" or
 // behind a prefix like "/scam-shield/demo" (nginx). /analyze is a sibling of /demo.
-const ANALYZE = location.pathname.replace(/\/demo\/?$/, "") + "/analyze";
+const ANALYZE = location.pathname.replace(/\/demo\/?$/, "") + "/try";
 const COLOR = { safe:"var(--safe)", caution:"var(--caution)", scam:"var(--scam)" };
 const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -106,6 +112,12 @@ function render(v){
   const flags = (v.red_flags||[]).map(f =>
     `<li class="flag"><span class="sev s-${esc(f.severity)}">${esc(f.severity)}</span><span><b>${esc(f.label)}</b> — ${esc(f.detail)}</span></li>`).join("");
   const acts = (v.recommended_actions||[]).map(a => `<li>${esc(a)}</li>`).join("");
+  const ev = (v.evidence||[]).map(e => {
+    const clean = e.severity === "info";
+    const icon = clean ? "✓" : "⚠";
+    return `<li class="ev ${clean?"ev-clean":"ev-bad"}"><span class="ev-ic">${icon}</span>`
+      + `<span>${esc(e.claim)} <span class="ev-src">${esc(e.source)}</span></span></li>`;
+  }).join("");
   out.innerHTML = `
     <div class="verdict">
       <div class="vhead">
@@ -116,7 +128,8 @@ function render(v){
         <div class="meter"><span style="width:${Math.max(2,Math.min(100,v.risk_score||0))}%;background:${COLOR[level]}"></span></div>
         <p class="tag" style="margin:-8px 0 12px">Risk ${esc(v.risk_score)}/100 · Confidence ${esc(v.confidence)}%</p>
         <p class="summary">${esc(v.summary||"")}</p>
-        ${flags ? `<h4>Red flags</h4><ul class="flags">${flags}</ul>`:""}
+        ${ev ? `<h4>Verified against live sources</h4><ul class="evlist">${ev}</ul>`:""}
+        ${flags ? `<h4>Red flags (assessment)</h4><ul class="flags">${flags}</ul>`:""}
         ${acts ? `<h4>What to do</h4><ol class="actions">${acts}</ol>`:""}
         <p class="disc">${esc(v.disclaimer||"")}</p>
       </div>
