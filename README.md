@@ -42,11 +42,11 @@ flowchart TB
     H["🧑 Human · browser"]
     AG["🤖 AI agent"]
 
-    subgraph EDGE["api.progena.xyz · nginx (TLS)"]
+    subgraph EDGE["scaminja.app · nginx (TLS)"]
         direction LR
         SITE["Landing + live checker"]
-        TRY["POST /scaminja/try<br/>free · rate-limited"]
-        PAY["POST /scaminja/analyze<br/>x402 · 0.02 USDT"]
+        TRY["POST /try<br/>free · rate-limited"]
+        PAY["POST /x402/analyze<br/>x402 · 0.02 USDT"]
     end
 
     subgraph APP["Scaminja · Node/TS on the VPS"]
