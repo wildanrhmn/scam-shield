@@ -14,6 +14,7 @@ export const InputType = z.enum([
   "token",
   "job_offer",
   "image",
+  "repo",
   "other",
 ]);
 export type InputType = z.infer<typeof InputType>;

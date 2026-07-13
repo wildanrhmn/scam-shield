@@ -6,10 +6,13 @@ import { validateInput, ValidationError } from "./security/validate.js";
 import { rateLimiter } from "./security/rateLimit.js";
 import { createPaymentLayer } from "./payment/x402.js";
 import { isBreakerOpen, tripBreaker, closeBreaker, isServiceUnavailableError } from "./breaker.js";
+import { analyzeRepo } from "./repo/analyze.js";
+import { RepoError } from "./repo/fetch.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true";
-const ROUTE_KEYS = ["POST /analyze", "GET /analyze"];
+const ROUTE_KEYS = ["POST /analyze", "GET /analyze", "POST /repo-analyze", "GET /repo-analyze"];
+const GATED_PATHS = new Set(["/analyze", "/try", "/repo-analyze", "/repo-try"]);
 
 // On any engine failure we return CAUTION, never a false "safe".
 function cautionBody(summary: string) {
@@ -45,7 +48,7 @@ async function main() {
   // Reject before the payment gate when the engine can't serve, so buyers are
   // never charged for a check we can't deliver.
   app.use((req, res, next) => {
-    if ((req.path === "/analyze" || req.path === "/try") && (req.method === "POST" || req.method === "GET") && isBreakerOpen()) {
+    if (GATED_PATHS.has(req.path) && (req.method === "POST" || req.method === "GET") && isBreakerOpen()) {
       return res
         .status(503)
         .set("Retry-After", "120")
@@ -107,9 +110,33 @@ async function main() {
     }
   };
 
+  // Second service: repo & dependency safety check.
+  const repoAnalyzeHandler = async (req: express.Request, res: express.Response) => {
+    const start = Date.now();
+    const src = (req.method === "GET" ? req.query : req.body) as Record<string, unknown>;
+    const repoUrl = typeof src?.repoUrl === "string" ? src.repoUrl.trim() : "";
+    const packageJson = typeof src?.packageJson === "string" ? src.packageJson : "";
+    if (!repoUrl && !packageJson) return res.status(400).json({ error: "Provide `repoUrl` (a GitHub URL) or `packageJson` (a pasted manifest)." });
+    if (packageJson.length > 300_000) return res.status(400).json({ error: "`packageJson` is too large." });
+    try {
+      const verdict = await analyzeRepo({ repoUrl, packageJson });
+      closeBreaker();
+      console.log(`[repo] ${verdict.verdict} risk=${verdict.risk_score} ev=${verdict.evidence.length} ${Date.now() - start}ms`);
+      res.json(verdict);
+    } catch (err) {
+      if (err instanceof RepoError) return res.json(cautionBody(err.message)); // expected input issue → friendly caution
+      console.error(`[repo] failed after ${Date.now() - start}ms:`, err instanceof Error ? err.message : err);
+      if (isServiceUnavailableError(err)) tripBreaker(err instanceof Error ? err.message : "engine unavailable");
+      res.status(503).json(cautionBody("We couldn't complete the repo check right now. Treat this as unverified and try again shortly."));
+    }
+  };
+
   app.post("/analyze", limiter, analyzeHandler); // paid (x402-gated) — for agents
   app.get("/analyze", limiter, analyzeHandler); // paid (x402-gated) — GET probe / query-string callers
   app.post("/try", limiter, analyzeHandler); // free, rate-limited — for the website
+  app.post("/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — repo safety, 2nd service
+  app.get("/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — GET probe
+  app.post("/repo-try", limiter, repoAnalyzeHandler); // free, rate-limited — for the website
 
   app.use((_req, res) => res.status(404).json({ error: "Not found." }));
 
