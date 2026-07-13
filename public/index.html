@@ -115,12 +115,14 @@
   .scen small{display:block;color:var(--faint);font-size:10.5px;margin-top:3px;font-family:var(--mono);letter-spacing:.02em}
   .btn.ghost{background:transparent;border-color:var(--line);color:var(--muted);padding:13px 16px}
   .btn.ghost:hover{color:var(--ink);border-color:rgba(79,227,208,.5)}
-  .imgprev{margin-top:12px;display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.03)}
-  .imgprev img{width:54px;height:54px;object-fit:cover;border-radius:8px;flex:0 0 auto;border:1px solid var(--line)}
-  .imgprev .meta{font-size:13px;color:var(--muted);flex:1;min-width:0}
-  .imgprev .meta b{color:var(--ink);display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .imgprev .rm{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 11px;cursor:pointer;font:inherit;font-size:12px;flex:0 0 auto}
-  .imgprev .rm:hover{color:var(--scam);border-color:rgba(255,84,104,.6)}
+  .atts{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px}
+  .att{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.03);max-width:250px}
+  .att img{width:44px;height:44px;object-fit:cover;border-radius:7px;flex:0 0 auto;border:1px solid var(--line)}
+  .att .ic{width:44px;height:44px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:rgba(111,141,255,.14);font-size:20px;flex:0 0 auto}
+  .att .nm{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .att .nm small{display:block;color:var(--faint);font-size:10.5px;font-family:var(--mono)}
+  .att .x{background:transparent;border:0;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:2px 4px;flex:0 0 auto}
+  .att .x:hover{color:var(--scam)}
   .console.drop{border-color:rgba(79,227,208,.6);box-shadow:0 0 0 3px rgba(79,227,208,.14)}
   .console.drop::after{content:"Drop screenshot to scan";position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;
     font-family:var(--mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);background:rgba(5,7,14,.72);border-radius:inherit;pointer-events:none}
@@ -302,13 +304,13 @@
         <span class="console-live"><span class="dot"></span> Live</span>
       </div>
       <div class="console-body">
-        <textarea id="in" placeholder="Paste a suspicious text, link, email, or wallet address — or drop / paste a screenshot…"></textarea>
-        <div id="imgprev" class="imgprev" hidden></div>
-        <input type="file" id="imgfile" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+        <textarea id="in" placeholder="Paste a suspicious text, link, email, or wallet address — or drop / paste a screenshot or PDF…"></textarea>
+        <div id="atts" class="atts" hidden></div>
+        <input type="file" id="filein" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple hidden />
         <div class="row">
           <button class="btn btn-primary" id="go"><span class="lbl">Check it</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-          <button class="btn ghost" id="imgbtn" type="button">📷 Screenshot</button>
-          <span class="tag">Free · no account · nothing stored</span>
+          <button class="btn ghost" id="imgbtn" type="button">📎 Attach</button>
+          <span class="tag">Screenshots &amp; PDFs · free · nothing stored</span>
         </div>
         <div class="scenarios">
           <button class="scen" data-s="ROYAL MAIL: Your parcel has a £1.99 unpaid shipping fee. Pay within 24h or it returns to sender: https://royalmail-redelivery.info/pay"><span class="si">📦</span><b>Parcel SMS</b><small>fake delivery fee</small></button>
@@ -379,17 +381,20 @@ const ANALYZE = (base || "") + "/try";
 const COLOR = { safe:"var(--safe)", caution:"var(--caution)", scam:"var(--scam)" };
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-document.querySelectorAll(".scen").forEach(c => c.onclick = () => { clearImage(); inp.value = c.dataset.s; check(); inp.scrollIntoView({block:"nearest"}); });
+document.querySelectorAll(".scen").forEach(c => c.onclick = () => { clearAtts(); inp.value = c.dataset.s; check(); inp.scrollIntoView({block:"nearest"}); });
 go.onclick = check;
 
-/* ---- screenshot: upload / drop / paste → downscaled base64 ---- */
-const imgfile = $("#imgfile"), imgbtn = $("#imgbtn"), imgprev = $("#imgprev"), consoleEl = $("#checker");
-let imageData = null, imageMime = null;
-imgbtn.onclick = () => imgfile.click();
-imgfile.onchange = () => { if(imgfile.files[0]) loadImage(imgfile.files[0]); imgfile.value = ""; };
+/* ---- attachments: screenshots (downscaled) + PDFs, via upload / drop / paste ---- */
+const filein = $("#filein"), imgbtn = $("#imgbtn"), attsEl = $("#atts"), consoleEl = $("#checker");
+const MAX_FILES = 8, MAX_PDF_BYTES = 6_000_000;
+let atts = []; // { kind, base64, mediaType, name, thumb? }
+imgbtn.onclick = () => filein.click();
+filein.onchange = () => { addFiles(filein.files); filein.value = ""; };
+
+function addFiles(list){ [...(list||[])].forEach(f => { if(f.type.startsWith("image/")) loadImage(f); else if(f.type === "application/pdf") loadPdf(f); else alert(`"${f.name}" isn't a supported file (images or PDF only).`); }); }
 
 function loadImage(file){
-  if(!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)){ alert("Please choose a PNG, JPG, WebP, or GIF image."); return; }
+  if(atts.length >= MAX_FILES){ alert(`Up to ${MAX_FILES} files.`); return; }
   const url = URL.createObjectURL(file), img = new Image();
   img.onload = () => {
     const max = 1600, scale = Math.min(1, max/Math.max(img.width, img.height));
@@ -397,31 +402,45 @@ function loadImage(file){
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     c.getContext("2d").drawImage(img, 0, 0, w, h);
     const dataUrl = c.toDataURL("image/jpeg", 0.92);
-    imageData = dataUrl.split(",")[1]; imageMime = "image/jpeg";
     URL.revokeObjectURL(url);
-    imgprev.hidden = false;
-    imgprev.innerHTML = `<img src="${dataUrl}" alt=""><span class="meta"><b>${esc(file.name||"screenshot")}</b>${w}×${h} · ready to scan</span><button class="rm" type="button">Remove</button>`;
-    imgprev.querySelector(".rm").onclick = clearImage;
+    atts.push({ kind:"image", base64:dataUrl.split(",")[1], mediaType:"image/jpeg", name:file.name||"screenshot", thumb:dataUrl });
+    renderAtts();
   };
   img.onerror = () => { alert("Couldn't read that image."); URL.revokeObjectURL(url); };
   img.src = url;
 }
-function clearImage(){ imageData = null; imageMime = null; imgprev.hidden = true; imgprev.innerHTML = ""; }
+function loadPdf(file){
+  if(atts.length >= MAX_FILES){ alert(`Up to ${MAX_FILES} files.`); return; }
+  if(file.size > MAX_PDF_BYTES){ alert("PDF is too large (max ~6 MB)."); return; }
+  const r = new FileReader();
+  r.onload = () => { atts.push({ kind:"pdf", base64:String(r.result).split(",")[1], mediaType:"application/pdf", name:file.name||"document.pdf" }); renderAtts(); };
+  r.onerror = () => alert("Couldn't read that PDF.");
+  r.readAsDataURL(file);
+}
+function renderAtts(){
+  attsEl.hidden = atts.length === 0;
+  attsEl.innerHTML = atts.map((a,i) =>
+    `<span class="att">${a.kind==="image" ? `<img src="${a.thumb}" alt="">` : `<span class="ic">📄</span>`}`
+    + `<span class="nm">${esc(a.name)}<small>${a.kind==="image"?"screenshot":"PDF"}</small></span>`
+    + `<button class="x" type="button" data-i="${i}" title="Remove">×</button></span>`).join("");
+  attsEl.querySelectorAll(".x").forEach(b => b.onclick = () => { atts.splice(+b.dataset.i,1); renderAtts(); });
+}
+function clearAtts(){ atts = []; renderAtts(); }
 
 ["dragover","dragenter"].forEach(ev => consoleEl.addEventListener(ev, e => { e.preventDefault(); consoleEl.classList.add("drop"); }));
 ["dragleave","drop"].forEach(ev => consoleEl.addEventListener(ev, e => { e.preventDefault(); if(ev!=="dragleave"||!consoleEl.contains(e.relatedTarget)) consoleEl.classList.remove("drop"); }));
-consoleEl.addEventListener("drop", e => { const f = [...(e.dataTransfer?.files||[])].find(f => f.type.startsWith("image/")); if(f) loadImage(f); });
-addEventListener("paste", e => { const it = [...(e.clipboardData?.items||[])].find(i => i.type.startsWith("image/")); if(it){ const f = it.getAsFile(); if(f) loadImage(f); } });
+consoleEl.addEventListener("drop", e => addFiles(e.dataTransfer?.files));
+addEventListener("paste", e => { const f = [...(e.clipboardData?.items||[])].filter(i => i.type.startsWith("image/")).map(i => i.getAsFile()).filter(Boolean); if(f.length) addFiles(f); });
 
 async function check(){
   const text = inp.value.trim();
-  if(!text && !imageData) return;
+  if(!text && !atts.length) return;
   go.disabled = true;
-  out.innerHTML = `<p class="tag" style="margin-top:16px"><span class="spinner"></span>${imageData ? "Reading screenshot &amp; analyzing…" : "Analyzing…"}</p>`;
+  out.innerHTML = `<p class="tag" style="margin-top:16px"><span class="spinner"></span>${atts.length ? "Reading attachment(s) &amp; analyzing…" : "Analyzing…"}</p>`;
   try{
     const body = {};
     if(text) body.text = text;
-    if(imageData){ body.imageBase64 = imageData; body.imageMediaType = imageMime; }
+    if(atts.length) body.files = atts.map(a => ({ kind:a.kind, base64:a.base64, mediaType:a.mediaType }));
     const r = await fetch(ANALYZE, {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
     render(await r.json());
   }catch(e){ out.innerHTML = `<p class="err" style="margin-top:14px">Couldn't reach the analyzer. ${esc(e.message||e)}</p>`; }

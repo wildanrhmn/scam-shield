@@ -1,43 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
+import crypto from "node:crypto";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { Verdict } from "./schema.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
 import { enrich } from "../enrich/index.js";
+import { vtFileHash } from "../enrich/virustotal.js";
 import type { Evidence } from "../enrich/types.js";
-import type { AnalyzeInput } from "../types.js";
+import type { AnalyzeInput, Attachment } from "../types.js";
 
 const MODEL = process.env.MODEL ?? "claude-sonnet-5";
 const OCR_MODEL = process.env.OCR_MODEL ?? "claude-haiku-4-5";
 const TIMEOUT_MS = Number(process.env.ANALYZE_TIMEOUT_MS ?? 45_000);
-
-// Pull the visible text + any URLs/addresses/emails out of a screenshot so the
-// same live-source validators that run on pasted text can run on images too.
-async function transcribeImage(imageBase64: string, mediaType: string): Promise<string> {
-  try {
-    const r = await getClient().messages.create(
-      {
-        model: OCR_MODEL,
-        max_tokens: 700,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType as any, data: imageBase64 } },
-              {
-                type: "text",
-                text: "Transcribe ALL text visible in this image verbatim, and separately list every URL, domain, email address, crypto wallet/token address, and phone number shown. Output only the raw extracted text — no commentary.",
-              },
-            ],
-          },
-        ],
-      },
-      { timeout: 20_000 },
-    );
-    return r.content.map((b: any) => (b.type === "text" ? b.text : "")).join("\n").trim();
-  } catch {
-    return "";
-  }
-}
+const MAX_TRANSCRIBE = 6; // cap the OCR passes per request
 
 export interface ScamVerdict extends Verdict {
   evidence: Evidence[];
@@ -51,6 +25,49 @@ function getClient(): Anthropic {
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
+// Legacy single image folds into the files array.
+function collectFiles(input: AnalyzeInput): Attachment[] {
+  const files = [...(input.files ?? [])];
+  if (input.imageBase64) files.push({ kind: "image", base64: input.imageBase64, mediaType: input.imageMediaType ?? "image/png" });
+  return files;
+}
+
+function fileBlock(att: Attachment): Anthropic.ContentBlockParam {
+  if (att.kind === "pdf") {
+    return { type: "document", source: { type: "base64", media_type: "application/pdf", data: att.base64 } };
+  }
+  return { type: "image", source: { type: "base64", media_type: (att.mediaType ?? "image/png") as any, data: att.base64 } };
+}
+
+// Pull the visible text + any URLs/addresses/emails out of a screenshot or PDF so
+// the same live-source validators that run on pasted text can run on files too.
+async function transcribeFile(att: Attachment): Promise<string> {
+  try {
+    const r = await getClient().messages.create(
+      {
+        model: OCR_MODEL,
+        max_tokens: 800,
+        messages: [
+          {
+            role: "user",
+            content: [
+              fileBlock(att),
+              {
+                type: "text",
+                text: "Transcribe ALL text visible in this file verbatim, and separately list every URL, domain, email address, crypto wallet/token address, and phone number shown. Output only the raw extracted text — no commentary.",
+              },
+            ],
+          },
+        ],
+      },
+      { timeout: 20_000 },
+    );
+    return r.content.map((b: any) => (b.type === "text" ? b.text : "")).join("\n").trim();
+  } catch {
+    return "";
+  }
+}
+
 function factsBlock(evidence: Evidence[]): string {
   if (evidence.length === 0) return "";
   const lines = evidence.map((e) => `- [${e.severity}] ${e.claim} (source: ${e.source})`).join("\n");
@@ -61,34 +78,41 @@ function factsBlock(evidence: Evidence[]): string {
 }
 
 export async function analyze(input: AnalyzeInput): Promise<ScamVerdict> {
+  const files = collectFiles(input);
   const hasText = !!input.text?.trim();
-  const hasImage = !!input.imageBase64;
-  if (!hasText && !hasImage) throw new Error("Provide `text` and/or `imageBase64` to analyze.");
+  const hasFiles = files.length > 0;
+  if (!hasText && !hasFiles) throw new Error("Provide `text` and/or a file to analyze.");
 
-  // Enrich runs on text; for screenshots we first transcribe the image so the
-  // URLs/addresses inside it get validated against live sources too.
+  // Evidence pass 1: transcribe files → run the same entity validators as text.
   let enrichSource = input.text?.trim() ?? "";
-  if (hasImage) {
-    const transcript = await transcribeImage(input.imageBase64!, input.imageMediaType ?? "image/png");
-    if (transcript) enrichSource = enrichSource ? `${enrichSource}\n${transcript}` : transcript;
+  if (hasFiles) {
+    const transcripts = await Promise.all(files.slice(0, MAX_TRANSCRIBE).map(transcribeFile));
+    const joined = transcripts.filter(Boolean).join("\n");
+    if (joined) enrichSource = enrichSource ? `${enrichSource}\n${joined}` : joined;
   }
-  const evidence: Evidence[] = enrichSource ? (await enrich(enrichSource)).evidence : [];
+  const textEvidence: Evidence[] = enrichSource ? (await enrich(enrichSource)).evidence : [];
 
-  const content: Anthropic.ContentBlockParam[] = [];
-  if (hasImage) {
-    content.push({
-      type: "image",
-      source: { type: "base64", media_type: input.imageMediaType ?? "image/png", data: input.imageBase64! },
-    });
-  }
+  // Evidence pass 2: check each file's SHA-256 against VirusTotal (hash only — the
+  // file never leaves the server) to catch known-malicious documents/images.
+  const hashEvidence: Evidence[] = (
+    await Promise.all(
+      files.map((f) => {
+        const sha = crypto.createHash("sha256").update(Buffer.from(f.base64, "base64")).digest("hex");
+        return vtFileHash(sha, f.kind === "pdf" ? "PDF file" : "Image file");
+      }),
+    )
+  ).flat();
 
+  const evidence: Evidence[] = [...hashEvidence, ...textEvidence];
+
+  const content: Anthropic.ContentBlockParam[] = files.map(fileBlock);
   const hint = input.typeHint ? `\n\n(Caller hint about the content type: ${input.typeHint})` : "";
   content.push({
     type: "text",
     text:
       (hasText
         ? `Assess whether the following is a scam. Return your verdict.\n\n"""\n${input.text!.trim()}\n"""${hint}`
-        : `Assess whether the attached screenshot shows a scam. Return your verdict.${hint}`) + factsBlock(evidence),
+        : `Assess whether the attached file${files.length > 1 ? "s" : ""} (screenshot / PDF) show a scam. Return your verdict.${hint}`) + factsBlock(evidence),
   });
 
   const response = await getClient().messages.parse(

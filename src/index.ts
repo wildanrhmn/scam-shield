@@ -39,7 +39,7 @@ async function main() {
     next();
   });
 
-  app.use(express.json({ limit: "9mb" }));
+  app.use(express.json({ limit: "14mb" }));
   app.use("/demo", express.static("public"));
 
   // Reject before the payment gate when the engine can't serve, so buyers are

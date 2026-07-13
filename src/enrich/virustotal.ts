@@ -41,3 +41,11 @@ export async function vtDomain(domain: string): Promise<Evidence[]> {
   const stats = data?.data?.attributes?.last_analysis_stats;
   return stats ? statsToEvidence(stats, domain, "Domain") : [];
 }
+
+// Look up an uploaded file by its SHA-256 — catches known-malicious documents
+// without ever sending the file itself (only the hash leaves the server).
+export async function vtFileHash(sha256: string, label = "File"): Promise<Evidence[]> {
+  const data = await vtGet(`files/${sha256}`);
+  const stats = data?.data?.attributes?.last_analysis_stats;
+  return stats ? statsToEvidence(stats, sha256, label) : [];
+}
