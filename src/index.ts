@@ -11,8 +11,8 @@ import { RepoError } from "./repo/fetch.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true";
-const ROUTE_KEYS = ["POST /analyze", "GET /analyze", "POST /repo-analyze", "GET /repo-analyze"];
-const GATED_PATHS = new Set(["/analyze", "/try", "/repo-analyze", "/repo-try"]);
+const ROUTE_KEYS = ["POST /x402/analyze", "GET /x402/analyze", "POST /x402/repo-analyze", "GET /x402/repo-analyze"];
+const GATED_PATHS = new Set(["/x402/analyze", "/try", "/x402/repo-analyze", "/repo-try"]);
 
 // On any engine failure we return CAUTION, never a false "safe".
 function cautionBody(summary: string) {
@@ -76,9 +76,11 @@ async function main() {
     }
     res.json({
       name: "Scaminja",
-      tagline: "Paste any message, link, email, or wallet address — get an instant, evidence-backed Safe / Caution / Scam verdict.",
-      endpoint: "POST /analyze",
-      input: { text: "string (optional)", imageBase64: "string (optional)", imageMediaType: "string", typeHint: "string (optional)" },
+      tagline: "Instant, evidence-backed scam / phishing / malicious-repo detection for humans and agents.",
+      services: [
+        { name: "Scam & Phishing Check", endpoint: "POST /x402/analyze", input: { text: "string", files: "[{kind:'image'|'pdf', base64, mediaType}] (optional)", typeHint: "string (optional)" } },
+        { name: "Repo & Dependency Check", endpoint: "POST /x402/repo-analyze", input: { repoUrl: "GitHub URL", packageJson: "string (either)" } },
+      ],
       price: `${process.env.PRICE ?? "$0.02"} per call`,
       network: "X Layer (eip155:196)",
       payments: PAYMENTS_ENABLED ? "x402 (A2MCP)" : "open (dev mode)",
@@ -131,11 +133,11 @@ async function main() {
     }
   };
 
-  app.post("/analyze", limiter, analyzeHandler); // paid (x402-gated) — for agents
-  app.get("/analyze", limiter, analyzeHandler); // paid (x402-gated) — GET probe / query-string callers
+  app.post("/x402/analyze", limiter, analyzeHandler); // paid (x402-gated) — for agents
+  app.get("/x402/analyze", limiter, analyzeHandler); // paid (x402-gated) — GET probe / query-string callers
   app.post("/try", limiter, analyzeHandler); // free, rate-limited — for the website
-  app.post("/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — repo safety, 2nd service
-  app.get("/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — GET probe
+  app.post("/x402/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — repo safety, 2nd service
+  app.get("/x402/repo-analyze", limiter, repoAnalyzeHandler); // paid (x402-gated) — GET probe
   app.post("/repo-try", limiter, repoAnalyzeHandler); // free, rate-limited — for the website
 
   app.use((_req, res) => res.status(404).json({ error: "Not found." }));

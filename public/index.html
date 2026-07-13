@@ -373,15 +373,16 @@
       <div class="terminal reveal">
         <div class="term-bar">
           <span class="cdot scam"></span><span class="cdot caution"></span><span class="cdot safe"></span>
-          <span class="term-title">POST /scaminja/analyze</span>
+          <span class="term-title">POST /x402/analyze</span>
           <button class="copy" id="copy">Copy</button>
         </div>
-<pre><code id="snippet"><span class="tok-c">curl</span> -X POST <span class="tok-s">https://api.progena.xyz/scaminja/analyze</span> \
+<pre><code id="snippet"><span class="tok-c">curl</span> -X POST <span class="tok-s">https://scaminja.app/x402/analyze</span> \
   -H <span class="tok-s">"content-type: application/json"</span> \
   -d <span class="tok-s">'{"text":"is this a scam? …"}'</span>
 
-<span class="tok-m"># → HTTP 402: pay 0.02 USDT on X Layer (x402),</span>
-<span class="tok-m">#   then receive the full verdict + evidence JSON</span></code></pre>
+<span class="tok-m"># → HTTP 402: pay 0.02 USDT on X Layer (x402), then</span>
+<span class="tok-m">#   receive the verdict + evidence JSON. Repo check:</span>
+<span class="tok-m">#   POST https://scaminja.app/x402/repo-analyze</span></code></pre>
       </div>
     </div>
   </div>
