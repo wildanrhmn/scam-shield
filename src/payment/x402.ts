@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { loadPaymentConfig, assertPaymentConfig, NETWORK, USDT0_DECIMALS } from "./config.js";
+import { loadPaymentConfig, assertPaymentConfig, NETWORK, USDT0_DECIMALS, USDT0_EIP712_NAME, USDT0_EIP712_VERSION } from "./config.js";
 
 // OKX Payment SDK (github.com/okx/payments). Export names verified against the
 // installed packages: OKXFacilitatorClient from x402-core; x402ResourceServer,
@@ -38,8 +38,9 @@ export async function createPaymentLayer(routeKeys: string[]): Promise<PaymentLa
     payTo: cfg.payTo,
     price: cfg.price,
     maxTimeoutSeconds: cfg.maxTimeoutSeconds,
-    // USDT0 isn't in OKX's task-system token list, so advertise its decimals.
-    extra: { decimals: USDT0_DECIMALS },
+    // USDT0 isn't in OKX's task-system token list, so advertise its EIP-712 domain
+    // (name/version) + decimals — clients signing EIP-3009 locally need the domain.
+    extra: { name: USDT0_EIP712_NAME, version: USDT0_EIP712_VERSION, decimals: USDT0_DECIMALS },
   };
   const routes = Object.fromEntries(routeKeys.map((k) => [k, { accepts }]));
   const httpServer = new srv.x402HTTPResourceServer(resourceServer, routes);

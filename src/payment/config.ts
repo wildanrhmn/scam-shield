@@ -2,6 +2,12 @@ export const NETWORK = "eip155:196"; // X Layer — the only OKX-supported netwo
 export const CHAIN_ID = 196;
 export const USDT0_ADDRESS = "0x779Ded0c9e1022225f8E0630b35a9b54bE713736";
 export const USDT0_DECIMALS = 6;
+// USDT0's EIP-712 domain, needed by clients that sign EIP-3009 locally (x402
+// `pay-local`). On-chain name() is "USD₮0" (the ₮ is U+20AE — built from the code
+// point so no source-file encoding can corrupt it); version "1" was verified by
+// reproducing the token's on-chain DOMAIN_SEPARATOR.
+export const USDT0_EIP712_NAME = "USD" + String.fromCodePoint(0x20ae) + "0";
+export const USDT0_EIP712_VERSION = "1";
 
 export interface PaymentConfig {
   enabled: boolean;
